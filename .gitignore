@@ -1,0 +1,43 @@
+# ---- Secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Java / Maven ----
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+HELP.md
+*.log
+
+# ---- Python ----
+python-service/venv/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ---- IDEs ----
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.sts4-cache/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
