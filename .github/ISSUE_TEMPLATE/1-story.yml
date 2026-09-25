@@ -1,0 +1,33 @@
+name: Story
+description: A user-facing capability, written from the user's perspective
+labels: ["type: story"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: Who needs it, what they need, and why.
+      value: "As a **<role>**, I want **<capability>**, so that **<benefit>**."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Testable scenarios in Given / When / Then form.
+      value: |
+        - [ ] **Given** … **when** … **then** …
+        - [ ] **Given** … **when** … **then** …
+    validations:
+      required: true
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Implementation checklist
+      value: |
+        - [ ] 
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical notes and dependencies
+      description: Design hints, risks, and "Blocked by #N" links.

@@ -1,0 +1,31 @@
+name: Spike
+description: Time-boxed research that ends in a decision or a design
+labels: ["type: spike"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question to answer
+      description: The decision or unknown this spike resolves.
+    validations:
+      required: true
+  - type: input
+    id: timebox
+    attributes:
+      label: Time-box
+      placeholder: e.g. 1 day
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Approach
+      value: |
+        - [ ] 
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: The artifact this produces (design doc, ADR, recommendation). A negative result is a valid outcome.
+    validations:
+      required: true
