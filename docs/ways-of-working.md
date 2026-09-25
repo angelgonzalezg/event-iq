@@ -1,4 +1,4 @@
-# EventIq - Ways of Working
+# EventIQ - Ways of Working
 
 How the EventIQ team plans, builds and ships. If something here stops being useful, raise it in the retrospective and change it.
 
@@ -19,11 +19,33 @@ Sprints last one week, Monday to Friday. Sprint 0 is the Tech Lead's platform se
 | Ceremony | When | Length | Purpose |
 |---|---|---|---|
 | Sprint Planning | Monday | 30 min | Agree on the sprint goal and move the items planned for this sprint from Backlog to Todo |
-| Daily standup | Every workday, async | 5 min | Post in the Standups discussion: yesterday, today, blockers |
+| Daily standup | Every workday, async | 5 min | Reply in that sprint's Standups discussion (see below) |
 | Sprint Review | Friday | 30 min | Demo what is Done; only merged work counts |
 | Retrospective | Friday, after the review | 15 min | One thing to keep, one to change, one action item |
 
 A blocker older than half a day gets the `blocked` label and a mention of the person who can unblock it. Do not wait for the next ceremony.
+
+**Standup discussions:** one GitHub Discussion per sprint, in the **Standups** category, opened by whoever runs Sprint Planning on Monday.
+
+Opening post:
+
+```markdown
+**Sprint goal:** <one line>
+
+Reply here each workday with your update. Keep it short.
+
+**Yesterday:**
+**Today:**
+**Blockers:**
+```
+
+Daily reply, from each person, each workday:
+
+```markdown
+**Yesterday:** 
+**Today:** 
+**Blockers:** none
+```
 
 ## Workflow
 
