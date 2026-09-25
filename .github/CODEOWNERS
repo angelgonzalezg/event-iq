@@ -1,0 +1,20 @@
+# Owners are requested automatically as reviewers when someone changes their files.
+# The last matching rule wins.
+
+# Default: Tech Lead
+*                                          @angelgonzalezg
+
+# Events & AI — Cesar
+/src/main/java/com/eventiq/events/         @euresticaesar
+/src/main/java/com/eventiq/ai/             @euresticaesar
+/src/main/java/com/eventiq/security/       @euresticaesar
+/src/main/resources/templates/events/      @euresticaesar
+
+# Payments & Analytics — Gianina
+/src/main/java/com/eventiq/payments/       @nahomigianina
+/src/main/java/com/eventiq/analytics/      @nahomigianina
+/src/main/resources/templates/payments/       @nahomigianina
+/python-service/                           @nahomigianina
+
+# Shared schema: both engineers review
+/db/                                       @euresticaesar @nahomigianina

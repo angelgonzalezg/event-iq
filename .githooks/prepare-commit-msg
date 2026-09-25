@@ -1,0 +1,13 @@
+#!/bin/sh
+# Prefixes the commit message with EIQ-<issue> taken from the branch name.
+# Branch feature/42-registration-capacity + `git commit -m "feat(events): validate capacity"`
+# becomes "EIQ-42 feat(events): validate capacity".
+case "$2" in merge|squash|commit) exit 0 ;; esac
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+issue=$(printf '%s' "$branch" | sed -n 's#^[a-z]*/\([0-9][0-9]*\)-.*#\1#p')
+[ -z "$issue" ] && exit 0
+
+case "$(head -n 1 "$1")" in EIQ-*) exit 0 ;; esac
+
+{ printf 'EIQ-%s ' "$issue"; cat "$1"; } > "$1.tmp" && mv "$1.tmp" "$1"

@@ -1,0 +1,42 @@
+name: commit-format
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  commit-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR title and commit messages
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          pattern='^EIQ-[0-9]+ (feat|fix|refactor|perf|test|docs|build|ci|chore)(\([a-z0-9-]+\))?!?: [^ ].{0,99}$'
+          example='EIQ-42 feat(events): validate capacity on registration'
+          fail=0
+
+          if ! grep -Eq "$pattern" <<< "$PR_TITLE"; then
+            echo "::error::PR title must look like '$example'. Got: $PR_TITLE"
+            fail=1
+          fi
+
+          for sha in $(git rev-list "$BASE_SHA..$HEAD_SHA"); do
+            subject=$(git log -1 --format=%s "$sha")
+            case "$subject" in Merge*) continue ;; esac
+            if ! grep -Eq "$pattern" <<< "$subject"; then
+              echo "::error::Commit ${sha:0:7} must look like '$example'. Got: $subject"
+              fail=1
+            fi
+          done
+
+          exit $fail

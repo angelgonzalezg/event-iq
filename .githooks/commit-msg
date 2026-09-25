@@ -1,0 +1,12 @@
+#!/bin/sh
+# Rejects commits whose subject does not follow: EIQ-<issue> <type>(<scope>): <summary>
+pattern='^EIQ-[0-9]+ (feat|fix|refactor|perf|test|docs|build|ci|chore)(\([a-z0-9-]+\))?!?: [^ ].{0,99}$'
+subject=$(head -n 1 "$1")
+
+case "$subject" in Merge*|fixup!*|squash!*) exit 0 ;; esac
+
+if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
+  echo "Commit message must look like: EIQ-42 feat(events): validate capacity on registration" >&2
+  echo "Got: $subject" >&2
+  exit 1
+fi

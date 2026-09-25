@@ -1,0 +1,49 @@
+name: Bug
+description: Something does not work as expected
+labels: ["type: bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Include error messages, logs or screenshots.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - "S1 - Blocker: the app or a core flow is unusable"
+        - "S2 - Major: a feature is broken, no reasonable workaround"
+        - "S3 - Minor: a feature misbehaves, workaround exists"
+        - "S4 - Trivial: cosmetic or wording"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Local (mvnw) / Docker Compose, OS, browser"
