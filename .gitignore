@@ -12,7 +12,6 @@ HELP.md
 *.log
 
 # ---- Python ----
-python-service/venv/
 venv/
 .venv/
 __pycache__/

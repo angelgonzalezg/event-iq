@@ -1,0 +1,9 @@
+# Local environment and caches: the image installs its own dependencies with uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Secrets never go into the image; Docker Compose passes them as environment variables
+.env

@@ -8,7 +8,7 @@ How the EventIQ team plans, builds and ships. If something here stops being usef
 |---|---|---|
 | Angel | Tech Lead | Platform, CI, architecture decisions, releases, code review support |
 | Cesar | Software Engineer · Events & AI | `events/`, `ai/`, `security/`, `templates/eventos/` |
-| Gianina | Software Engineer · Payments & Analytics | `payments/`, `analytics/`, `python-service/`, `templates/pagos/` |
+| Gianina | Software Engineer · Payments & Analytics | `payments/`, `analytics/`, `analytics-service/`, `templates/pagos/` |
 
 Ownership is recorded in `.github/CODEOWNERS`. Changing a file you do not own is fine, but it goes through a pull request that the owner reviews.
 
