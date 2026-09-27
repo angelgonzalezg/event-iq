@@ -25,7 +25,7 @@ Each module was built end-to-end by one student: data model, Java CRUD, web view
 | Security | Spring Security: form login for views, JWT via OAuth2 Resource Server for `/api/**` |
 | AI | Spring AI 2.0 (`spring-ai-starter-model-google-genai`) + Google Gemini API (free tier); Ollama as a local alternative |
 | Analytics | Python 3.14 managed with [uv](https://docs.astral.sh/uv/), FastAPI, python-oracledb, pandas, scikit-learn, TextBlob |
-| Frontend | Thymeleaf, Chart.js |
+| Frontend | Thymeleaf, Bootstrap 5, Bootstrap Icons, Chart.js (loaded from a CDN, no frontend build) |
 | Database | Oracle Database Free |
 | Infrastructure | Docker, Docker Compose, GitHub Actions (build check) |
 | API docs | Postman |
@@ -52,6 +52,24 @@ Spring Boot (:8080)
 ```
 
 Views and the REST API share the same service layer. Java handles the transactional core and Python handles analytics, both on the same database.
+
+---
+
+## Views
+
+| Route | Page | Module |
+|---|---|---|
+| `/` | Home: entry point to both modules | Shared |
+| `/events` | Event list; create and edit at `/events/new` and `/events/{id}/edit` | Events & Attendees |
+| `/events/{id}` | Event detail with its registrations | Events & Attendees |
+| `/registrations/new` | Register an attendee for an event, within its capacity | Events & Attendees |
+| `/assistant` | Conversational assistant (RAG over Oracle with Gemini) | Events & Attendees |
+| `/payments` | Payments, filterable by status | Payments & Reports |
+| `/payments/new` | Record a payment | Payments & Reports |
+| `/analytics` | Analytics dashboard: revenue, ticket types, forecast and sentiment | Payments & Reports |
+| `/login` | Sign-in page | Shared |
+
+Every page uses the shared layout in `templates/fragments/layout.html`, which holds the menu for both modules and the alerts shown when Gemini or the analytics service does not respond. To add a page, follow [`docs/view-conventions.md`](docs/view-conventions.md).
 
 ---
 
@@ -144,11 +162,13 @@ event-iq/
 │   └── config/
 ├── src/main/resources/
 │   ├── templates/      # Thymeleaf views (fragments/, events/, payments/)
+│   ├── static/         # CSS and images
+│   ├── i18n/           # UI texts: shared, events and payments
 │   └── application.yml
 ├── analytics-service/  # FastAPI analytics service and seed_data.py
 ├── db/schema.sql
 ├── postman/
-├── docs/               # ways of working, setup troubleshooting, ADRs, contributions, analysis notebook
+├── docs/               # ways of working, view conventions, setup troubleshooting, ADRs, contributions, analysis notebook
 ├── docker-compose.yml
 ├── .env.example
 └── README.md

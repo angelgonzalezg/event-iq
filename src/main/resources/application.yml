@@ -10,6 +10,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none   # the schema is created by db/schema.sql
+  messages:
+    # UI texts: shared, then one file per module. Keep it a comma-separated string:
+    # Spring Boot does not detect the message files when this is written as a YAML list.
+    basename: i18n/messages,i18n/events,i18n/payments
   ai:
     google:
       genai:

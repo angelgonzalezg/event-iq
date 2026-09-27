@@ -2,19 +2,21 @@
 # The last matching rule wins.
 
 # Default: Tech Lead
-*                                          @angelgonzalezg
+*                                             @angelgonzalezg
 
 # Events & AI — Cesar
-/src/main/java/com/eventiq/events/         @euresticaesar
-/src/main/java/com/eventiq/ai/             @euresticaesar
-/src/main/java/com/eventiq/security/       @euresticaesar
-/src/main/resources/templates/events/      @euresticaesar
+/src/main/java/com/eventiq/events/            @euresticaesar
+/src/main/java/com/eventiq/ai/                @euresticaesar
+/src/main/java/com/eventiq/security/          @euresticaesar
+/src/main/resources/templates/events/         @euresticaesar
+/src/main/resources/i18n/events.properties    @euresticaesar
 
 # Payments & Analytics — Gianina
-/src/main/java/com/eventiq/payments/       @nahomigianina
-/src/main/java/com/eventiq/analytics/      @nahomigianina
-/src/main/resources/templates/payments/    @nahomigianina
-/analytics-service/                        @nahomigianina
+/src/main/java/com/eventiq/payments/          @nahomigianina
+/src/main/java/com/eventiq/analytics/         @nahomigianina
+/src/main/resources/templates/payments/       @nahomigianina
+/src/main/resources/i18n/payments.properties  @nahomigianina
+/analytics-service/                           @nahomigianina
 
 # Shared schema: both engineers review
-/db/                                       @euresticaesar @nahomigianina
+/db/                                          @euresticaesar @nahomigianina

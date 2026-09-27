@@ -38,6 +38,10 @@ Run `git config core.hooksPath .githooks` once after cloning: it adds the `EIQ-<
 - Keep PRs small. Reviews happen within one business day.
 - Merge the latest `main` and confirm the app starts before opening a PR.
 
+## Views
+
+New pages reuse the shared layout and keep their texts in the module's message file. Routes, templates, alerts and styles are described in [`docs/view-conventions.md`](docs/view-conventions.md).
+
 ## Dependencies
 
 Versions are pinned. To add, upgrade or remove a dependency, follow [Dependency updates](docs/ways-of-working.md#dependency-updates): it lists the commands and every file that pins each version.
