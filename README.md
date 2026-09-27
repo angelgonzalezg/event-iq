@@ -24,13 +24,13 @@ Each module was built end-to-end by one student: data model, Java CRUD, web view
 | Backend | Java 25, Spring Boot 4 (MVC + REST), Spring Data JPA |
 | Security | Spring Security: form login for views, JWT via OAuth2 Resource Server for `/api/**` |
 | AI | Spring AI 2.0 (`spring-ai-starter-model-google-genai`) + Google Gemini API (free tier); Ollama as a local alternative |
-| Analytics | Python, FastAPI, python-oracledb, pandas, scikit-learn, TextBlob |
+| Analytics | Python 3.14 managed with [uv](https://docs.astral.sh/uv/), FastAPI, python-oracledb, pandas, scikit-learn, TextBlob |
 | Frontend | Thymeleaf, Chart.js |
 | Database | Oracle Database Free |
 | Infrastructure | Docker, Docker Compose, GitHub Actions (build check) |
 | API docs | Postman |
 
-Exact dependency versions are defined in `pom.xml` and `analytics-service/requirements.txt`.
+Exact dependency versions are defined in `pom.xml` and `analytics-service/uv.lock`.
 
 ---
 
@@ -59,7 +59,7 @@ Views and the REST API share the same service layer. Java handles the transactio
 
 ### Prerequisites
 
-Java 25 (Java 21 is the minimum required by Spring AI 2.0), Python 3.14, Docker, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com) (new keys are *auth keys*; legacy *standard* keys stopped working in September 2026).
+Java 25 (Java 21 is the minimum required by Spring AI 2.0), [uv](https://docs.astral.sh/uv/) (it installs Python 3.14 for the analytics service), Docker, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com) (new keys are *auth keys*; legacy *standard* keys stopped working in September 2026).
 
 ### 1. Clone and configure
 
@@ -108,11 +108,10 @@ Data persists in the `oradata` Docker volume.
 ```
 ```bash
 cd analytics-service
-python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m textblob.download_corpora
-python seed_data.py                               # first run only
-uvicorn main:app --reload --port 8000
+uv sync                                           # creates .venv with the locked dependencies
+uv run python -m textblob.download_corpora        # first run only
+uv run python seed_data.py                        # first run only
+uv run uvicorn main:app --reload --port 8000
 ```
 
 The app runs at `http://localhost:8080`. The analytics API docs are at `http://localhost:8000/docs`.
@@ -143,7 +142,7 @@ event-iq/
 ├── analytics-service/  # FastAPI analytics service and seed_data.py
 ├── db/schema.sql
 ├── postman/
-├── docs/               # project guide, contributions, analysis notebook
+├── docs/               # ways of working, ADRs, contributions, analysis notebook
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
