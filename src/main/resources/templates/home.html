@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=#{home.title}, section='home', content=~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1 th:text="#{home.heading}">Welcome to EventIQ</h1>
+      <p class="page-subtitle" th:text="#{home.subtitle}">Manage events, attendees and payments on one Oracle database.</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <section class="card h-100" aria-labelledby="module-events">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <span class="icon-tile icon-tile-events" aria-hidden="true"><i class="bi bi-calendar-event"></i></span>
+            <div>
+              <h2 class="h5 mb-0" id="module-events" th:text="#{nav.section.events}">Events &amp; Attendees</h2>
+              <span class="small text-body-secondary" th:text="#{home.events.focus}">Applied AI</span>
+            </div>
+          </div>
+          <p class="text-body-secondary" th:text="#{home.events.description}">Plan events and register attendees.</p>
+          <div class="list-group list-group-flush app-link-list">
+            <a class="list-group-item list-group-item-action" th:href="@{/events}">
+              <i class="bi bi-calendar3" aria-hidden="true"></i><span th:text="#{home.events.browse}">Browse events</span>
+              <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
+            </a>
+            <a class="list-group-item list-group-item-action" th:href="@{/registrations/new}">
+              <i class="bi bi-person-plus" aria-hidden="true"></i><span th:text="#{home.events.register}">Register an attendee</span>
+              <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
+            </a>
+            <a class="list-group-item list-group-item-action" th:href="@{/assistant}">
+              <i class="bi bi-stars" aria-hidden="true"></i><span th:text="#{home.events.assistant}">Ask the assistant</span>
+              <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-lg-6">
+      <section class="card h-100" aria-labelledby="module-payments">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <span class="icon-tile icon-tile-payments" aria-hidden="true"><i class="bi bi-graph-up-arrow"></i></span>
+            <div>
+              <h2 class="h5 mb-0" id="module-payments" th:text="#{nav.section.payments}">Payments &amp; Reports</h2>
+              <span class="small text-body-secondary" th:text="#{home.payments.focus}">Data science</span>
+            </div>
+          </div>
+          <p class="text-body-secondary" th:text="#{home.payments.description}">Record payments and explore revenue.</p>
+          <div class="list-group list-group-flush app-link-list">
+            <a class="list-group-item list-group-item-action" th:href="@{/payments}">
+              <i class="bi bi-credit-card" aria-hidden="true"></i><span th:text="#{home.payments.review}">Review payments</span>
+              <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
+            </a>
+            <a class="list-group-item list-group-item-action" th:href="@{/payments/new}">
+              <i class="bi bi-receipt" aria-hidden="true"></i><span th:text="#{home.payments.record}">Record a payment</span>
+              <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
+            </a>
+            <a class="list-group-item list-group-item-action" th:href="@{/analytics}">
+              <i class="bi bi-bar-chart-line" aria-hidden="true"></i><span th:text="#{home.payments.analytics}">Open analytics</span>
+              <i class="bi bi-chevron-right ms-auto" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+</body>
+</html>

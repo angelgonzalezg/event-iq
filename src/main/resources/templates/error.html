@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--/* Spring Boot renders this page for every error status (404, 403, 500...), with status in the model. */-->
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=#{error.title}, section='', content=~{::main})}">
+<body>
+<main>
+  <div class="app-empty-state">
+    <p class="app-error-code" th:text="${status}">404</p>
+    <h1 class="h3"
+        th:text="${#messages.msgOrNull('error.' + status + '.heading') ?: #messages.msg('error.default.heading')}">
+      Page not found
+    </h1>
+    <p class="text-body-secondary"
+       th:text="${#messages.msgOrNull('error.' + status + '.description') ?: #messages.msg('error.default.description')}">
+      This page does not exist or has not been built yet.
+    </p>
+    <a class="btn btn-primary" th:href="@{/}">
+      <i class="bi bi-house" aria-hidden="true"></i>
+      <span th:text="#{error.back-home}">Back to home</span>
+    </a>
+  </div>
+</main>
+</body>
+</html>

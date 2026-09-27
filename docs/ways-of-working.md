@@ -204,6 +204,14 @@ Get the SHA of a tag with `git ls-remote https://github.com/<owner>/<repo> 'refs
 
 The job ids in `.github/workflows/` (`java`, `python`, `commit-format`) are the check names the ruleset requires: renaming a job means updating the ruleset in the same change, or every pull request stays blocked waiting for a check that no longer runs. For the same reason, workflows with required checks have no `paths:` filters.
 
+**Front-end libraries (CDN).** Bootstrap, Bootstrap Icons and Chart.js load from jsDelivr, with the version in the URL and an `integrity` hash that makes the browser reject any file that does not match. Update the version and the hash together; to get the hash of a file:
+
+```bash
+curl -sL https://cdn.jsdelivr.net/npm/bootstrap@<version>/dist/css/bootstrap.min.css | openssl dgst -sha384 -binary | openssl base64 -A
+```
+
+Prefix the result with `sha384-`. Bootstrap also publishes the hashes on its download page.
+
 **Where each version lives.** Some tools appear in more than one file; change all of them in the same pull request:
 
 | Tool | Files |
@@ -216,7 +224,8 @@ The job ids in `.github/workflows/` (`java`, `python`, `commit-format`) are the 
 | uv | `.github/workflows/build.yml` (`setup-uv` step), `analytics-service/Dockerfile`, local install (`brew upgrade uv`) |
 | Oracle Database Free | `README.md` (Getting Started), `docker-compose.yml` |
 | GitHub Actions | `.github/workflows/*.yml` |
-| Chart.js | CDN URL in the Thymeleaf templates |
+| Bootstrap, Bootstrap Icons | CDN URLs and `integrity` hashes in `src/main/resources/templates/fragments/layout.html` |
+| Chart.js | CDN URL and `integrity` hash in the analytics template (`templates/payments/`) and in `docs/view-conventions.md` |
 | Gemini model | `src/main/resources/application.yml` (default of `AI_MODEL`) and `.env.example` |
 
 The Dockerfiles and `docker-compose.yml` arrive with #51. When the pull request is merged, also update the versions table in the project guide (§5.1).

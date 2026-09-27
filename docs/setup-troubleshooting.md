@@ -1,4 +1,4 @@
-# Setup Troubleshooting
+# EventIQ - Setup Troubleshooting
 
 Symptom, cause and fix for the problems most likely to show up while following [Getting Started](../README.md#getting-started). Start with the quick checks: they usually point to the right section.
 
