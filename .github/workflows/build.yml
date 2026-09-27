@@ -1,0 +1,50 @@
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A new push to the same pull request cancels the run that is still in progress
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Job ids are the check names required by the ruleset for main: keep them in sync
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw -B verify
+
+  python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: analytics-service
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: '0.12.19'
+          working-directory: analytics-service
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Compile sources
+        run: uv run python -m compileall -q -x '/\.venv/' .
