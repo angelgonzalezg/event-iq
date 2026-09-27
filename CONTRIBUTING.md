@@ -38,6 +38,10 @@ Run `git config core.hooksPath .githooks` once after cloning: it adds the `EIQ-<
 - Keep PRs small. Reviews happen within one business day.
 - Merge the latest `main` and confirm the app starts before opening a PR.
 
+## Dependencies
+
+Versions are pinned. To add, upgrade or remove a dependency, follow [Dependency updates](docs/ways-of-working.md#dependency-updates): it lists the commands and every file that pins each version.
+
 ## Questions
 
 Open an issue with the Task form, or ask in the sprint's Standups discussion.

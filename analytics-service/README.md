@@ -21,6 +21,6 @@ uv run uvicorn main:app --reload --port 8000
 
 ## Dependencies
 
-Add or update a dependency with `uv add <package>==<version>`: it updates `pyproject.toml` and `uv.lock` together, and both files are committed. Do not use `pip install`, or `uv.lock` goes out of date.
+Add or upgrade a dependency with `uv add <package>==<version>` and remove one with `uv remove <package>`: both update `pyproject.toml` and `uv.lock` together, and both files are committed. Do not use `pip install`: `uv.lock` goes out of date and the `python` check fails. The full process is in [Dependency updates](../docs/ways-of-working.md#dependency-updates).
 
 Before working on sentiment analysis, download the TextBlob corpora once: `uv run python -m textblob.download_corpora`.
