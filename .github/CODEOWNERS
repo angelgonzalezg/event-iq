@@ -14,7 +14,7 @@
 /src/main/java/com/eventiq/payments/       @nahomigianina
 /src/main/java/com/eventiq/analytics/      @nahomigianina
 /src/main/resources/templates/payments/       @nahomigianina
-/python-service/                           @nahomigianina
+/analytics-service/                        @nahomigianina
 
 # Shared schema: both engineers review
 /db/                                       @euresticaesar @nahomigianina
