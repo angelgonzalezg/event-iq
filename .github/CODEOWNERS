@@ -13,7 +13,7 @@
 # Payments & Analytics — Gianina
 /src/main/java/com/eventiq/payments/       @nahomigianina
 /src/main/java/com/eventiq/analytics/      @nahomigianina
-/src/main/resources/templates/payments/       @nahomigianina
+/src/main/resources/templates/payments/    @nahomigianina
 /analytics-service/                        @nahomigianina
 
 # Shared schema: both engineers review

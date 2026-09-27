@@ -83,12 +83,16 @@ Spring Boot, the Python service, and Docker Compose all read this single `.env` 
 ### 2. Start the database (first run only: create user and schema)
 
 ```bash
-docker compose up -d oracle-free
-docker compose logs -f oracle-free   # wait for: DATABASE IS READY TO USE!
+docker run -d --name oracle-free \
+  -p 1521:1521 \
+  -e ORACLE_PWD=<admin_password> \
+  -v oradata:/opt/oracle/oradata \
+  container-registry.oracle.com/database/free:23.26.3.0
+docker logs -f oracle-free   # wait for: DATABASE IS READY TO USE!
 ```
 
 ```bash
-docker compose exec oracle-free sqlplus system/<admin_password>@//localhost:1521/FREEPDB1
+docker exec -it oracle-free sqlplus system/<admin_password>@//localhost:1521/FREEPDB1
 ```
 ```sql
 CREATE USER app_user IDENTIFIED BY "<app_password>";
@@ -96,10 +100,10 @@ GRANT CONNECT, RESOURCE TO app_user;
 ALTER USER app_user QUOTA UNLIMITED ON USERS;
 ```
 ```bash
-docker compose exec -T oracle-free sqlplus app_user/<app_password>@//localhost:1521/FREEPDB1 < db/schema.sql
+docker exec -i oracle-free sqlplus app_user/<app_password>@//localhost:1521/FREEPDB1 < db/schema.sql
 ```
 
-Data persists in the `oradata` Docker volume.
+All three SQL statements are required: without the grants, the application fails with `ORA-01017`. Data persists in the `oradata` Docker volume; on later runs, `docker start oracle-free` is enough.
 
 ### 3. Run the application (two terminals)
 
@@ -137,7 +141,7 @@ event-iq/
 │   ├── security/       # Form login + JWT
 │   └── config/
 ├── src/main/resources/
-│   ├── templates/      # Thymeleaf views (fragments/, eventos/, pagos/)
+│   ├── templates/      # Thymeleaf views (fragments/, events/, payments/)
 │   └── application.yml
 ├── analytics-service/  # FastAPI analytics service and seed_data.py
 ├── db/schema.sql
@@ -169,7 +173,7 @@ Both modules were developed in parallel:
 
 - Each student owns their module's packages and folders; ownership is enforced through [`CODEOWNERS`](.github/CODEOWNERS).
 - `main` is protected: every change arrives through a pull request that must pass the build check and be approved by the other student.
-- Branches follow the `feature/<module>-<topic>` convention, and commits follow [Conventional Commits](https://www.conventionalcommits.org).
+- Each branch maps to one issue (`feature/<issue>-<topic>`), and every commit starts with the issue key: `EIQ-<issue> <type>(<scope>): <summary>`, based on [Conventional Commits](https://www.conventionalcommits.org). Git hooks and a CI check enforce the format; see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 
