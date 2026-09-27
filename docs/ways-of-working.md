@@ -169,6 +169,57 @@ The key uses `EIQ-` rather than `#` because Git treats lines starting with `#` a
 - Link the issue with `Closes #<issue>` in the description. This connects the pull request to the issue, closes it on merge and, with squash merging, adds a clickable `#<issue>` link to the commit on `main`. `EIQ-42` alone is plain text.
 - Keep pull requests small; reviews happen within one business day and include at least one useful comment.
 - Before opening a pull request, merge the latest `main` and check that the application starts.
+- `main` is protected by a ruleset: a pull request, one approval and the `java`, `python` and `commit-format` checks are required, and force pushes are blocked. The Tech Lead can bypass it for pull requests only, never for direct pushes; every bypass is logged in the repository's Rule insights.
+
+## Dependency updates
+
+Versions are pinned everywhere, so the whole team and CI run exactly the same tools. Changing a version, or adding or removing a dependency, is ordinary work: an issue, a branch and a pull request, reviewed like any other change.
+
+**Analytics service (uv).** Run the commands from `analytics-service/` and commit `pyproject.toml` and `uv.lock` together:
+
+| To… | Run |
+|---|---|
+| Add a package | `uv add <package>==<version>` |
+| Add a development-only package (tests, tools) | `uv add --dev <package>==<version>` |
+| Remove a package | `uv remove <package>` |
+| Upgrade a direct dependency | `uv add <package>==<new-version>` |
+| Refresh indirect dependencies | `uv lock --upgrade` |
+
+Never use `pip install`: the `python` check runs `uv sync --locked` and fails if `uv.lock` is out of date. After pulling changes, run `uv sync` to update your local environment.
+
+**Spring Boot application (Maven).**
+
+- Spring Boot: the `<parent>` version in `pom.xml`. Boot manages the versions of its starters and of most libraries, so new dependencies are added without a `<version>`; only libraries that Boot does not manage get an explicit one.
+- Spring AI: the `spring-ai.version` property in `pom.xml`.
+- Maven itself: `./mvnw wrapper:wrapper -Dmaven=<version>`.
+- To see what is available: `./mvnw versions:display-parent-updates` and `./mvnw versions:display-dependency-updates`.
+
+**GitHub Actions.** Official actions (`actions/*`) use their major tag, for example `@v7`, and receive patches automatically; update them when a new major version is released. Third-party actions are pinned by full commit SHA, with the version as a comment, because a tag can be moved to different code and a SHA cannot:
+
+```yaml
+- uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+```
+
+Get the SHA of a tag with `git ls-remote https://github.com/<owner>/<repo> 'refs/tags/<tag>*'` (for annotated tags, use the line ending in `^{}`) and update the SHA and the comment together.
+
+The job ids in `.github/workflows/` (`java`, `python`, `commit-format`) are the check names the ruleset requires: renaming a job means updating the ruleset in the same change, or every pull request stays blocked waiting for a check that no longer runs. For the same reason, workflows with required checks have no `paths:` filters.
+
+**Where each version lives.** Some tools appear in more than one file; change all of them in the same pull request:
+
+| Tool | Files |
+|---|---|
+| Java | `pom.xml` (`java.version`), `.github/workflows/build.yml` (`java-version`), root `Dockerfile` |
+| Spring Boot, Spring AI | `pom.xml` |
+| Maven | `.mvn/wrapper/maven-wrapper.properties` |
+| Python | `analytics-service/.python-version`, `analytics-service/pyproject.toml` (`requires-python`), `analytics-service/Dockerfile` |
+| Python packages | `analytics-service/pyproject.toml` and `analytics-service/uv.lock` |
+| uv | `.github/workflows/build.yml` (`setup-uv` step), `analytics-service/Dockerfile`, local install (`brew upgrade uv`) |
+| Oracle Database Free | `README.md` (Getting Started), `docker-compose.yml` |
+| GitHub Actions | `.github/workflows/*.yml` |
+| Chart.js | CDN URL in the Thymeleaf templates |
+| Gemini model | `src/main/resources/application.yml` (default of `AI_MODEL`) and `.env.example` |
+
+The Dockerfiles and `docker-compose.yml` arrive with #51. When the pull request is merged, also update the versions table in the project guide (§5.1).
 
 ## Architecture decisions
 
