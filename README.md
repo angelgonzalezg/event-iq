@@ -59,7 +59,7 @@ Views and the REST API share the same service layer. Java handles the transactio
 
 ### Prerequisites
 
-Java 25 (Java 21 is the minimum required by Spring AI 2.0), Python 3.10+, Docker, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com) (new keys are *auth keys*; legacy *standard* keys stopped working in September 2026).
+Java 25 (Java 21 is the minimum required by Spring AI 2.0), Python 3.14, Docker, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com) (new keys are *auth keys*; legacy *standard* keys stopped working in September 2026).
 
 ### 1. Clone and configure
 

@@ -15,7 +15,7 @@ spring:
       genai:
         api-key: ${AI_API_KEY}
         chat:
-          model: ${AI_MODEL:gemini-2.5-flash}   # Spring AI 2.0: no ".options" segment
+          model: ${AI_MODEL:gemini-3.8-flash}   # Spring AI 2.0: no ".options" segment
 
 analytics:
   base-url: ${ANALYTICS_URL:http://localhost:8000}
