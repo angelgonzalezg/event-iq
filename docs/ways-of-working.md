@@ -135,6 +135,10 @@ Anyone on the team can add work to the backlog at any time. New issues land in *
 
 **New stories or tasks** use the Story or Task form. They start in Backlog and move to Todo only after meeting the Definition of Ready in Sprint Planning. Anything that would change the current sprint's goal is discussed with the Tech Lead first.
 
+## Language
+
+Everything in the repository is written in English: code, routes, database tables, columns and status values, classes, methods, variables, comments, commit messages, issues, pull requests and UI texts. It keeps the codebase consistent and readable for anyone who reviews the portfolio. UI texts live in `src/main/resources/i18n/`, so another language can be added later without touching templates; see [View Conventions](view-conventions.md#texts).
+
 ## Branches, commits and pull requests
 
 **Branches:** one per issue, `feature/<issue>-<short-slug>` for stories and tasks, `fix/<issue>-<short-slug>` for bugs. Example: `feature/42-registration-capacity`.
@@ -229,6 +233,14 @@ Prefix the result with `sha384-`. Bootstrap also publishes the hashes on its dow
 | Gemini model | `src/main/resources/application.yml` (default of `AI_MODEL`) and `.env.example` |
 
 The Dockerfiles and `docker-compose.yml` arrive with #51. When the pull request is merged, also update the versions table in the project guide (§5.1).
+
+## Releases
+
+Releases follow [Semantic Versioning](https://semver.org) and match the milestones: `v0.1.0` is the base platform and `v1.0.0` the MVP. The Tech Lead runs them:
+
+1. When every issue in the milestone is closed, open a release pull request that sets the version in `pom.xml` (`<version>`) and in `analytics-service/pyproject.toml` (`version`, then run `uv lock`, because the lock file records the project version), and updates anything in the README that depends on the release.
+2. After it is merged, tag `main` as `vX.Y.Z` and publish a GitHub release: what is included, how to run it, known limitations and the merged pull requests.
+3. Close the milestone.
 
 ## Architecture decisions
 

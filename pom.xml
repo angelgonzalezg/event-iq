@@ -10,21 +10,24 @@
 	</parent>
 	<groupId>com.eventiq</groupId>
 	<artifactId>event-iq</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
+	<version>0.1.0</version>
+	<name>EventIQ</name>
+	<description>Event management system combining applied AI and data science on a shared Oracle database</description>
+	<url>https://github.com/angelgonzalezg/event-iq</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
 	</licenses>
 	<developers>
 		<developer/>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/angelgonzalezg/event-iq.git</connection>
+		<developerConnection>scm:git:git@github.com:angelgonzalezg/event-iq.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/angelgonzalezg/event-iq</url>
 	</scm>
 	<properties>
 		<java.version>25</java.version>
