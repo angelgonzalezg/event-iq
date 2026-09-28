@@ -2,6 +2,10 @@
 
 Quick reference for day-to-day work. Full detail — ceremonies, Definition of Ready/Done, estimation, bug triage — lives in [`docs/ways-of-working.md`](docs/ways-of-working.md).
 
+## Language
+
+Everything in the repository is in English: code, routes, database objects, identifiers, comments, commits, issues, pull requests and UI texts. See [Language](docs/ways-of-working.md#language).
+
 ## Branches
 
 One branch per issue: `feature/<issue>-<short-slug>` for stories and tasks, `fix/<issue>-<short-slug>` for bugs.

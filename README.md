@@ -77,6 +77,8 @@ Every page uses the shared layout in `templates/fragments/layout.html`, which ho
 
 If a step fails, check [`docs/setup-troubleshooting.md`](docs/setup-troubleshooting.md): it covers the most common setup errors and how to fix them.
 
+> **Status in v0.1.0:** the base platform runs: the web app with its shared layout and home page, and the analytics service with `GET /health`. The database schema, sample data, sign-in and Postman collections arrive during v1.0.0, so for now skip the `db/schema.sql` command in step 2, the `seed_data.py` command in step 3 and step 4. Menu links to pages that are not built yet show a "Page not found" page.
+
 ### Prerequisites
 
 Java 25 (Java 21 is the minimum required by Spring AI 2.0), [uv](https://docs.astral.sh/uv/) (it installs Python 3.14 for the analytics service), Docker, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com) (new keys are *auth keys*; legacy *standard* keys stopped working in September 2026).
