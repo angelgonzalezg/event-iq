@@ -10,6 +10,8 @@ Replace `<app_password>` and `<admin_password>` with your own values. Never past
 
 ## Quick checks
 
+`scripts/check-setup.sh` runs these checks, and a few more, in one go; see [Onboarding](onboarding.md#3-check-your-setup). To check by hand:
+
 | Check | Command | Expected |
 |---|---|---|
 | Oracle container | `docker ps --filter name=oracle-free` | `STATUS` starts with `Up` |

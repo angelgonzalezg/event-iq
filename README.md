@@ -81,6 +81,8 @@ If a step fails, check [`docs/setup-troubleshooting.md`](docs/setup-troubleshoot
 
 ### Prerequisites
 
+Setting up a machine for the first time? [`docs/onboarding.md`](docs/onboarding.md) walks through installing everything on macOS, Linux or Windows and checks the result with `scripts/check-setup.sh`.
+
 Java 25 (Java 21 is the minimum required by Spring AI 2.0), [uv](https://docs.astral.sh/uv/) (it installs Python 3.14 for the analytics service), Docker, and a free Gemini API key from [Google AI Studio](https://aistudio.google.com) (new keys are *auth keys*; legacy *standard* keys stopped working in September 2026).
 
 ### 1. Clone and configure
@@ -170,7 +172,8 @@ event-iq/
 ├── analytics-service/  # FastAPI analytics service and seed_data.py
 ├── db/schema.sql
 ├── postman/
-├── docs/               # ways of working, view conventions, setup troubleshooting, ADRs, contributions, analysis notebook
+├── scripts/            # check-setup.sh: verifies a local setup
+├── docs/               # onboarding, ways of working, view conventions, setup troubleshooting, ADRs, contributions, analysis notebook
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
