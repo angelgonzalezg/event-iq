@@ -15,7 +15,6 @@ Replace `<app_password>` and `<admin_password>` with your own values. Never past
 | Check | Command | Expected |
 |---|---|---|
 | Oracle container | `docker ps --filter name=oracle-free` | `STATUS` starts with `Up` |
-| Database ready | `docker logs oracle-free \| grep "READY TO USE"` | `DATABASE IS READY TO USE!` |
 | Service registered | `docker exec oracle-free lsnrctl status \| grep -i freepdb1` | A `Service "freepdb1"` line |
 | `app_user` can log in | `docker exec -it oracle-free sqlplus app_user@//localhost:1521/FREEPDB1` | `Connected to:` after typing the password |
 | JDK used by Maven | `./mvnw -v` | `Java version: 25` |
@@ -314,17 +313,7 @@ Spring Boot starts with `./mvnw spring-boot:run` but fails from the IDE (or the 
 ./mvnw -v
 ```
 
-Point `JAVA_HOME` to JDK 25 in your shell profile and open a new terminal:
-
-```bash
-# macOS (~/.zshrc)
-export JAVA_HOME=$(/usr/libexec/java_home -v 25)
-
-# Linux and WSL2 (~/.bashrc); the folder depends on how the JDK was installed (ls /usr/lib/jvm)
-export JAVA_HOME=/usr/lib/jvm/<jdk-25-folder>
-```
-
-If no JDK 25 is installed (`/usr/libexec/java_home -V` lists the installed ones on macOS), install Temurin 25 from [adoptium.net](https://adoptium.net).
+If it reports another version, point `JAVA_HOME` to JDK 25 in your shell profile, as in the onboarding for [macOS](onboarding.md#macos) or [Linux and WSL2](onboarding.md#linux-ubuntu-or-debian), and open a new terminal. If JDK 25 is not installed (`/usr/libexec/java_home -V` lists the installed JDKs on macOS, `ls /usr/lib/jvm` on Linux), install it with the same steps.
 
 The IDE has its own settings: select JDK 25 as the project SDK and as the JDK that runs Maven (IntelliJ IDEA: File → Project Structure → Project → SDK, and Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE).
 
@@ -441,19 +430,17 @@ git config core.hooksPath .githooks
 
 ## Windows with WSL2 (not validated yet)
 
-These are the usual WSL2 pitfalls; they have not been tested on this project yet. If you set up EventIQ on Windows, confirm or correct this section in a pull request.
+The installation steps are in [Onboarding → Windows](onboarding.md#windows). These are the usual WSL2 pitfalls; they have not been tested on this project yet. If you set up EventIQ on Windows, confirm or correct this section in a pull request.
 
-- Work inside the WSL2 distribution (for example Ubuntu), and install JDK 25, uv and Git there; the Windows installations are not used from WSL.
-- Clone into the Linux file system (for example `~/projects/event-iq`), not under `/mnt/c/`. It is much faster, and Git for Windows may convert line endings to CRLF, which breaks the Git hooks and other shell scripts with `bad interpreter` errors.
-- In Docker Desktop, enable Settings → Resources → WSL integration for your distribution; `docker ps` must work inside WSL.
-- Docker's memory comes from WSL2. If Oracle stops during the first start, raise the limit in `%UserProfile%\.wslconfig`, run `wsl --shutdown` and start Docker Desktop again:
+- **`java`, `uv` or `git` is missing or has the wrong version inside Ubuntu:** WSL does not use the Windows installations. Install the tools inside Ubuntu with the [Linux steps](onboarding.md#linux-ubuntu-or-debian).
+- **`docker` is not found inside Ubuntu:** in Docker Desktop, enable Settings → Resources → WSL integration for your distribution; `docker ps` must work inside WSL.
+- **Builds are very slow, or scripts fail with `bad interpreter: /bin/bash^M`:** the repository is under `/mnt/c/` or was cloned with Git for Windows, which can convert line endings to CRLF. Clone it again inside the Linux file system (for example `~/projects/event-iq`) with the Git inside Ubuntu.
+- **Oracle stops during the first start:** Docker's memory comes from WSL2. Raise the limit in `%UserProfile%\.wslconfig`, run `wsl --shutdown` and start Docker Desktop again:
 
   ```ini
   [wsl2]
   memory=6GB
   ```
-
-- Set `JAVA_HOME` with the Linux instructions in [release version 25 not supported](#release-version-25-not-supported).
 
 ---
 

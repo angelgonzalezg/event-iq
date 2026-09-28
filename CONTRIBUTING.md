@@ -50,6 +50,10 @@ New pages reuse the shared layout and keep their texts in the module's message f
 
 Versions are pinned. To add, upgrade or remove a dependency, follow [Dependency updates](docs/ways-of-working.md#dependency-updates): it lists the commands and every file that pins each version.
 
+## Documentation
+
+Each setup document has one job: the README describes the project and how to run it, [`docs/onboarding.md`](docs/onboarding.md) takes a new machine to a working setup, and [`docs/setup-troubleshooting.md`](docs/setup-troubleshooting.md) gives the symptom, cause and fix of each failure. Keep each instruction in one of them and link to it from the others, so they do not drift apart. When a setup step changes, update [`scripts/check-setup.sh`](scripts/check-setup.sh) too if it checks that step.
+
 ## Questions
 
 Open an issue with the Task form, or ask in the sprint's Standups discussion.
