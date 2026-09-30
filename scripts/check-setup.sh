@@ -264,7 +264,14 @@ if [ "$QUICK" = false ]; then
       if wait_for_http "http://localhost:$APP_PORT/" 120 "$pid"; then
         case "$(http_code "http://localhost:$APP_PORT/")" in
           200)
-            if curl -s "http://localhost:$APP_PORT/" | grep -q "Welcome to EventIQ"; then
+            # Body saved to a file, with a timeout and retries: a single piped curl sometimes returns nothing.
+            home_ok=false
+            for _ in 1 2 3; do
+              curl -s --max-time 5 -o "$LOG_DIR/home.html" "http://localhost:$APP_PORT/" || true
+              if grep -q "Welcome to EventIQ" "$LOG_DIR/home.html" 2>/dev/null; then home_ok=true; break; fi
+              sleep 2
+            done
+            if [ "$home_ok" = true ]; then
               pass "application: the home page renders on http://localhost:$APP_PORT"
             else
               fail "application: the home page answered without its content" "see $LOG_DIR/app.log"
