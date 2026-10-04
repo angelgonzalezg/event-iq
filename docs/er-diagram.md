@@ -1,178 +1,153 @@
 # Shared Database Model
 
-The Events & Attendees and Payments & Reports modules share six Oracle
-tables. `registrations` connects the two modules.
+The two modules share six Oracle tables. See [`db/schema.sql`](../db/schema.sql) for exact types, lengths, defaults and constraints.
 
-The diagram uses simplified type names. Exact lengths, precision,
-defaults and constraints are defined in [`db/schema.sql`](../db/schema.sql).
+## Tables
 
-## Entity relationship diagram
+| Table | What it stores |
+|---|---|
+| `events` | Event details, date, location and capacity. |
+| `attendees` | Attendee names and contact details. |
+| `registrations` | Each attendee's registration for an event, its status and its latest registration and cancellation dates. |
+| `ticket_types` | The ticket options and prices for each event. |
+| `payments` | Payment records for registrations, including free tickets and refund dates. |
+| `comments` | Event feedback from registered attendees. |
+
+## ER diagram
 
 ```mermaid
 erDiagram
     EVENTS {
         NUMBER event_id PK
         VARCHAR2 name
-        VARCHAR2 description "Optional"
+        VARCHAR2 description
         DATE event_date
-        VARCHAR2 location "Optional"
-        NUMBER capacity "Positive integer"
+        VARCHAR2 location
+        NUMBER capacity
     }
 
     ATTENDEES {
         NUMBER attendee_id PK
         VARCHAR2 name
         VARCHAR2 email UK
-        VARCHAR2 phone "Optional"
+        VARCHAR2 phone
     }
 
     REGISTRATIONS {
         NUMBER registration_id PK
-        NUMBER event_id FK "Part of composite unique key"
-        NUMBER attendee_id FK "Part of composite unique key"
-        DATE registered_at "Default SYSDATE"
-        VARCHAR2 status "Default pending"
+        NUMBER event_id FK
+        NUMBER attendee_id FK
+        DATE registered_at
+        DATE cancelled_at
+        VARCHAR2 status
     }
 
     TICKET_TYPES {
         NUMBER ticket_type_id PK
+        NUMBER event_id FK
         VARCHAR2 name
-        NUMBER price "Positive; precision 10, scale 2"
+        NUMBER price
     }
 
     PAYMENTS {
         NUMBER payment_id PK
         NUMBER registration_id FK
         NUMBER ticket_type_id FK
-        NUMBER amount "Positive; precision 10, scale 2"
-        DATE paid_at "Required for paid and refunded"
-        VARCHAR2 status "Default pending"
+        NUMBER event_id FK
+        NUMBER amount
+        DATE paid_at
+        DATE refunded_at
+        VARCHAR2 status
     }
 
     COMMENTS {
         NUMBER comment_id PK
         NUMBER attendee_id FK
         NUMBER event_id FK
-        VARCHAR2 content "Nonblank; up to 1000 characters"
-        DATE created_at "Default SYSDATE"
+        VARCHAR2 content
+        DATE created_at
     }
 
     EVENTS ||--o{ REGISTRATIONS : has
     ATTENDEES ||--o{ REGISTRATIONS : makes
+    EVENTS ||--o{ TICKET_TYPES : offers
     REGISTRATIONS ||--o{ PAYMENTS : has
     TICKET_TYPES ||--o{ PAYMENTS : classifies
+    REGISTRATIONS ||--o{ COMMENTS : permits
     EVENTS ||--o{ COMMENTS : receives
     ATTENDEES ||--o{ COMMENTS : writes
 ```
 
-`PK` identifies a primary key, `FK` a foreign key and `UK` a unique key.
-Each relationship connects exactly one parent to zero or more child records.
+`PK` means primary key. `FK` means foreign key. `UK` means unique key. Each line connects one parent record to zero or more child records.
 
-All columns are required except `events.description`, `events.location`,
-`attendees.phone` and the conditionally nullable `payments.paid_at`.
+## Data rules
 
-The `uq_registration` constraint applies to the combination
-`(event_id, attendee_id)`. Neither column is individually unique.
+- An attendee can have only one registration per event. This includes cancelled registrations. The pair `(event_id, attendee_id)` is unique.
+- Each ticket type belongs to one event. Different events can have different ticket prices. Names do not have to be unique.
+- A payment must use a registration and a ticket type from the same event. Two foreign keys use `payments.event_id` to enforce this rule.
+- A registration can have only one active payment: `pending` or `paid`. After a refund, a new payment is allowed.
+- A comment requires a registration for that attendee and event. The registration can have any status, including `cancelled`.
+- Oracle blocks deletion of a registration that has comments or payments. A status change does not delete the registration.
+- Capacity must be a positive integer. Prices and amounts can be zero, but cannot be negative.
+- Required names, emails and comments cannot contain only whitespace.
+- Store emails as `LOWER(TRIM(email))`. The database rejects other forms; it does not change the input. Emails must be unique.
 
-## Design decisions
+## Statuses and payment dates
 
-### Identifiers and relationships
+Registrations use `pending`, `confirmed` or `cancelled`. Payments use the states below. Both tables default to `pending`.
 
-- Primary keys use `GENERATED BY DEFAULT AS IDENTITY`.
-- Every registration references one existing event and one existing attendee.
-- An attendee can have at most one registration per event, including
-  cancelled registrations.
-- Every payment references one existing registration and one existing
-  ticket type.
-- Multiple payments per registration remain possible, matching the
-  original project model.
-- Every comment references one existing attendee and one existing event.
-  The schema does not require the attendee to be registered for that event.
-- Foreign keys prevent deleting referenced records. Cascading deletes
-  are not enabled.
-
-### Values and validation
-
-- Event capacity must be a positive integer.
-- Ticket prices and payment amounts must be greater than zero.
-- Monetary values use `NUMBER(10,2)`.
-- Event, attendee and ticket type names, attendee emails and comment
-  content must contain at least one non-whitespace character.
-- Text columns use explicit character-length semantics with
-  `VARCHAR2(n CHAR)`.
-- Attendee emails are unique according to the database comparison rules
-  for the stored values. This change does not normalize case or trim
-  surrounding whitespace.
-- Event names and ticket type names are not unique. Reports should group
-  by identifiers as well as names to avoid combining different records.
-
-### Statuses and dates
-
-| Table | Allowed statuses | Default |
+| Payment status | `paid_at` | `refunded_at` |
 |---|---|---|
-| `registrations` | `pending`, `confirmed`, `cancelled` | `pending` |
-| `payments` | `pending`, `paid`, `refunded` | `pending` |
+| `pending` | Null | Null |
+| `paid` | Required | Null |
+| `refunded` | Required | Required; not before `paid_at` |
 
-- Statuses are required and stored in lowercase.
-- `registered_at` and `created_at` are required and default to `SYSDATE`.
-- Defaults apply when the column is omitted from an insert; explicitly
-  inserting `NULL` into a required column is rejected.
-- Pending payments must have a null `paid_at`.
-- Paid and refunded payments must have a non-null `paid_at`.
-- `paid_at` records when payment was received. A refund preserves the
-  original payment date.
-- Date columns retain the Oracle `DATE` type from the project guide.
+`paid_at` records when the payment is complete. For a free ticket, it records when the zero-amount operation is complete. A refund keeps the original payment date and amount.
 
-### Indexes
+The application sets payment dates with each status change. These columns have no default. SQL constraints check the current values, not past status changes.
 
-Primary and unique constraints provide indexes for their keys.
-Additional indexes cover:
+## Registration changes
 
-- `registrations.attendee_id`
-- `payments.registration_id`
-- `payments.ticket_type_id`
-- `comments.attendee_id`
-- `comments.event_id`
-- `events.event_date`
+Cancel a registration with a status update, not a row deletion. Reuse the same row when the attendee registers again.
 
-The composite unique key on `(event_id, attendee_id)` already supports
-lookups starting with `registrations.event_id`.
+| Action | New status | `registered_at` | `cancelled_at` |
+|---|---|---|---|
+| First registration | `pending` | Set to the current UTC time | Null |
+| Confirm | `confirmed` | Keep the value | Keep the value |
+| Cancel | `cancelled` | Keep the value | Set to the current UTC time |
+| Register again | `pending` | Set to the current UTC time | Keep the last cancellation time |
 
-## Application responsibilities
+`registered_at` stores the latest registration time. `cancelled_at` stores the latest cancellation time. Earlier dates are not retained.
 
-The schema enforces row-level checks, uniqueness and referential integrity.
-Application services must also:
+A cancelled registration must have `cancelled_at` at or after `registered_at`. An active registration can retain an older cancellation date. Use `status` to identify its current state.
 
-- Validate available capacity within a transaction, including concurrent
-  registration requests.
-- Define which registration statuses count toward capacity.
-- Define cancellation and re-registration behavior while respecting the
-  unique event/attendee pair.
-- Validate payment amounts against ticket prices when payments are created.
-- Enforce the allowed payment transitions: `pending` to `paid`, then
-  `paid` to `refunded`.
-- Update payment status and payment date together when receiving payment.
-- Validate email format and apply any agreed email normalization policy
-  consistently when storing and looking up attendees.
-- Decide whether commenting requires registration.
-- Define whether ticket distribution reports count payments or distinct
-  registrations, and which payment statuses they include.
-- Translate validation and integrity failures into appropriate API responses.
+The application updates the status and dates together. Check capacity again before reactivation. These actions do not automatically change payments or remove comments. The service must define how to handle existing payments.
 
-## Schema creation and reset
+## Time conventions
 
-- Run [`db/schema.sql`](../db/schema.sql) with SQL*Plus as the application
-  schema owner, after creating the application user.
-- The creation script expects the six application tables not to exist.
-- `SET SQLBLANKLINES ON` allows blank lines inside SQL statements.
-- Run [`db/drop.sql`](../db/drop.sql) only when intentionally resetting
-  the development database.
-- The reset script drops tables in reverse dependency order and uses
-  `IF EXISTS` to support absent tables or partially created schemas.
-- `PURGE` permanently removes the dropped tables and their data.
-- Scripts exit on SQL or operating-system errors. SQL*Plus command errors
-  are not covered by `WHENEVER SQLERROR`.
-- Oracle DDL commits implicitly. A failure can leave a partially created
-  or partially removed schema; `ROLLBACK` does not undo completed DDL.
+- Store `registered_at`, `cancelled_at`, `paid_at`, `refunded_at` and `created_at` in UTC. Oracle `DATE` does not store a time zone.
+- `registered_at` and `created_at` default to the current UTC date and time. Applications must also use UTC for values they supply.
+- Keep both the date and time in Java for these fields. `LocalDate` stores only the date and loses the time.
+- `event_date` is the venue's local calendar date. Use `LocalDate` without UTC conversion. The project uses one business time zone, which the team must specify.
+- Convert UTC values to local time for display. For reports, convert them to the business time zone before grouping by day or month.
 
-Changes to this shared model must be reviewed by both module owners.
+## Application requirements
+
+- Check capacity in a transaction that handles concurrent requests.
+- Check that a new payment amount matches its ticket price. Get `payments.event_id` from the registration.
+- Allow payment transitions from `pending` to `paid`, then from `paid` to `refunded`.
+- Normalize emails before writes and lookups. Validate the email format separately.
+- Use JPA `AttributeConverter` implementations to store enum values in lowercase. Do not also use `@Enumerated` on those fields.
+- Apply these data rules to the seed generator as well as the application.
+
+## Create and reset the schema
+
+Use SQL*Plus with the application database user. The target is Oracle AI Database 26ai Free, image `23.26.3.0`.
+
+- Run [`db/schema.sql`](../db/schema.sql) when the six tables do not exist. It creates the schema; it does not update existing tables.
+- Run [`db/drop.sql`](../db/drop.sql) only to reset development data. It displays the connection and a warning, then deletes without confirmation.
+- The reset requires `DROP TABLE IF EXISTS` support. It succeeds when tables are absent. `PURGE` permanently removes tables and data.
+- Oracle commits DDL automatically. `ROLLBACK` cannot undo a completed create or drop operation.
+- The scripts stop on SQL errors. SQL*Plus command errors can still require manual attention.
+
+Both module owners review changes to this model.
