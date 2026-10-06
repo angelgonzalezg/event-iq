@@ -187,10 +187,13 @@ event-iq/
 │   ├── i18n/           # UI texts: shared, events and payments
 │   └── application.yml
 ├── analytics-service/  # FastAPI analytics service and seed_data.py
-├── db/schema.sql
+├── db/
+│   ├── schema.sql      # shared Oracle tables, constraints and indexes
+│   └── drop.sql        # destructive development reset
 ├── postman/
 ├── scripts/            # check-setup.sh: verifies a local setup
 ├── docs/               # onboarding, ways of working, view conventions, setup troubleshooting, ADRs, contributions, analysis notebook
+│   └── er-diagram.md   # shared data model and database conventions
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
