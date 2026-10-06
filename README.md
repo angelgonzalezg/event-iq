@@ -55,6 +55,23 @@ Views and the REST API share the same service layer. Java handles the transactio
 
 ---
 
+## Architecture Decisions
+
+The main technical decisions are recorded as ADRs in [`docs/adr/`](docs/adr/README.md), each with its context, the alternatives considered and its consequences.
+
+| ADR | Decision | Status |
+|---|---|---|
+| [ADR-001](docs/adr/001-java-25-spring-boot-4-and-spring-ai-2.md) | Java 25, Spring Boot 4 and Spring AI 2.0 | Accepted |
+| [ADR-002](docs/adr/002-oracle-database-free.md) | Oracle Database Free instead of Autonomous Database | Accepted |
+| [ADR-003](docs/adr/003-gemini-through-spring-ai.md) | Gemini through Spring AI, with Ollama as the local alternative | Accepted |
+| [ADR-004](docs/adr/004-form-login-for-views-jwt-for-api.md) | Form login for views and JWT for the API | Accepted |
+| [ADR-005](docs/adr/005-sql-retrieval-as-rag-baseline.md) | SQL-based retrieval as the RAG baseline | Accepted |
+| [ADR-006](docs/adr/006-functional-modules-owned-end-to-end.md) | Functional modules owned end to end by one engineer | Accepted |
+| [ADR-007](docs/adr/007-uv-for-python-dependencies.md) | uv for Python and the analytics service dependencies | Accepted |
+| [ADR-008](docs/adr/008-pinned-versions.md) | Pinned versions everywhere, changed only through pull requests | Accepted |
+
+---
+
 ## Views
 
 | Route | Page | Module |
