@@ -244,4 +244,4 @@ Releases follow [Semantic Versioning](https://semver.org) and match the mileston
 
 ## Architecture decisions
 
-Significant decisions are recorded as ADRs in `docs/adr/`: context, decision, consequences. If you are choosing between two approaches and the choice would be hard to reverse, write an ADR and link it from the pull request.
+Significant decisions are recorded as ADRs in `docs/adr/`: context, decision, alternatives considered and consequences. If you are choosing between two approaches and the choice would be hard to reverse, write an ADR and link it from the pull request. [`docs/adr/README.md`](adr/README.md) explains how to write one, and the README lists them under [Architecture Decisions](../README.md#architecture-decisions).
