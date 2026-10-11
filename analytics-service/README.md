@@ -24,3 +24,10 @@ uv run uvicorn main:app --reload --port 8000
 Add or upgrade a dependency with `uv add <package>==<version>` and remove one with `uv remove <package>`: both update `pyproject.toml` and `uv.lock` together, and both files are committed. Do not use `pip install`: `uv.lock` goes out of date and the `python` check fails. The full process is in [Dependency updates](../docs/ways-of-working.md#dependency-updates).
 
 Before working on sentiment analysis, download the TextBlob corpora once: `uv run python -m textblob.download_corpora`.
+
+## Synthetic Data
+
+The database seeding script generates realistic synthetic data (~50 events, ~200 attendees, ~800 registrations with payments, and ~200 comments) for development and model training purposes. You can populate the database by running:
+
+```bash
+uv run python seed_data.py --truncate
