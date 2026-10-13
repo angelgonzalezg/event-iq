@@ -1,11 +1,14 @@
 import sys
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from database import get_connection
-import json
 
 # Seed the random number generator for reproducibility
 random.seed(42)
+
+def get_utc_now():
+    """Returns the current date and time in UTC without a time zone for Oracle DATE compatibility"""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 def truncate_tables(cursor):
     """ Truncate the tables to remove existing data.
@@ -152,7 +155,6 @@ def seed():
 
     print("Ticket types created for all events!")
     
-
     # TABLE ATTENDEES ~ 200 
     # Declarate synthetic attendee names (first and last names)
     first_names = ["Gael", "Margarita", "Sebastián", "Leticia", "Mateo", "Juana", "Jesús", "Fernanda", "Gabriel", "Teresa", 
@@ -177,7 +179,7 @@ def seed():
 
         email = f"{first_name.lower()}.{last_name.lower()}@eventiq.com"
 
-        #Generate phone number
+        # Generate phone number
         if random.choice([True, False]):
             lada = random.choice(["55", "33", "81"])
             local = random.randint(10000000, 99999999)
@@ -232,7 +234,7 @@ def seed():
             else: 
                 status = "cancelled"
 
-            # Cancellation date logic
+            # Cancellation date logic in UTC
             cancelled_at = None
             if status == "cancelled":
                 days_diff = (event_date - registered_at).days
@@ -257,7 +259,8 @@ def seed():
                 "event_id": event_id, 
                 "attendee_id": attendee_id, 
                 "status": status,
-                "registered_at": registered_at
+                "registered_at": registered_at,
+                "event_date": event_date
             })
 
     print("Registrations created successfully!")
@@ -288,7 +291,7 @@ def seed():
             ticket_type_id = 1
             amount = 250.00
 
-        # Map registration status to payment status
+        # Registration status to payment status
         if status == "confirmed":
             payment_status = "paid"
         elif status == "pending":
@@ -296,7 +299,7 @@ def seed():
         else: # cancelled
             payment_status = "refunded"
 
-        # Date logic consistent with table CHECK constraints
+        # Date logic consistent with table CHECK constraints in UTC
         paid_at = None
         refunded_at = None
 
@@ -320,8 +323,6 @@ def seed():
 
     print(f"Payments created successfully! ({payments_count} payments)")
 
-   
-
     # TABLE COMMENTS ~200
     print("Generating comments...")
 
@@ -337,7 +338,7 @@ def seed():
         "keynotes", "logistics"
     ]
 
-    # Each sentiment has its own vocabulary and sentence structures.
+    # Each sentiment has its own vocabulary and sentence structures
     sentiment_data = {
         "positive": {
             "openings": [
@@ -401,7 +402,7 @@ def seed():
         }
     }
 
-    # Generate a large pool of distinct comments for each sentiment.
+    # Generate a large pool of distinct comments for each sentiment
     def build_unique_combinations(sentiment):
         data = sentiment_data[sentiment]
         combinations = set()
@@ -438,7 +439,7 @@ def seed():
 
     random.shuffle(selected_comments)
 
-    # Ensure that 200 registrations are available.
+    # Ensure that 200 registrations are available
     target_registrations = registrations[:200]
 
     if len(target_registrations) < 200:
@@ -447,7 +448,7 @@ def seed():
             "At least 200 are required."
         )
 
-    # Verify uniqueness across the entire selected dataset.
+    # Verify uniqueness across the entire selected dataset
     used_comments = set()
 
     for content, sentiment in selected_comments:
@@ -458,10 +459,7 @@ def seed():
 
         used_comments.add(normalized_content)
 
-    # Keep sentiment labels in memory for later testing.
-    # The current comments table does not store a sentiment column.
     expected_sentiments = {}
-
     comments_count = 0
 
     for reg, (content, sentiment) in zip(
@@ -469,9 +467,13 @@ def seed():
     ):
         event_id = reg["event_id"]
         attendee_id = reg["attendee_id"]
+        event_date = reg["event_date"]
 
-        created_at = datetime.now() - timedelta(
-            days=random.randint(0, 30)
+        #  Created_at in UTC is created after the event date and fourteen days after
+        created_at = event_date + timedelta(
+            days=random.randint(0, 14),
+            hours=random.randint(0, 23),
+            minutes=random.randint(0, 59)
         )
 
         cursor.execute(
@@ -488,13 +490,11 @@ def seed():
 
     print(f"Created {comments_count} unique comments!")
 
-
     conn.commit()
 
     cursor.close()
     conn.close()
     print("Database seeding completed successfully!!!")
-
 
 if __name__ == "__main__":
     seed()
