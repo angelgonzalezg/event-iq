@@ -73,6 +73,7 @@ An item can enter a sprint when:
 An item is Done when:
 
 - All acceptance criteria are met.
+- New or changed logic and endpoints have automated tests: unit tests for services, `@WebMvcTest` for controllers, an `*IT` for custom queries, and pytest for the analytics service. See [Testing](testing.md).
 - The pull request is approved by a teammate and CI is green.
 - The application starts and the feature works locally.
 - The Postman collection is updated if an endpoint was added or changed.
@@ -172,7 +173,7 @@ The key uses `EIQ-` rather than `#` because Git treats lines starting with `#` a
 - The description uses the template: Overview (with screenshots or logs), Developer/Reviewer checklist, Documentation impact and How to test.
 - Link the issue with `Closes #<issue>` in the description. This connects the pull request to the issue, closes it on merge and, with squash merging, adds a clickable `#<issue>` link to the commit on `main`. `EIQ-42` alone is plain text.
 - Keep pull requests small; reviews happen within one business day and include at least one useful comment.
-- Before opening a pull request, merge the latest `main` and check that the application starts.
+- Before opening a pull request, merge the latest `main`, check that the application starts and run the tests: `./mvnw verify`, plus `uv run pytest` if the analytics service changed.
 - `main` is protected by a ruleset: a pull request, one approval and the `java`, `python` and `commit-format` checks are required, and force pushes are blocked. The Tech Lead can bypass it for pull requests only, never for direct pushes; every bypass is logged in the repository's Rule insights.
 
 ## Dependency updates
@@ -226,7 +227,7 @@ Prefix the result with `sha384-`. Bootstrap also publishes the hashes on its dow
 | Python | `analytics-service/.python-version`, `analytics-service/pyproject.toml` (`requires-python`), `analytics-service/Dockerfile` |
 | Python packages | `analytics-service/pyproject.toml` and `analytics-service/uv.lock` |
 | uv | `.github/workflows/build.yml` (`setup-uv` step), `analytics-service/Dockerfile`, local install (`brew upgrade uv`) |
-| Oracle Database Free | `README.md` (Getting Started), `docker-compose.yml` |
+| Oracle Database Free | `README.md` (Getting Started), `docker-compose.yml`, and the test image in `src/test/java/com/eventiq/OracleTestDatabase.java` (`gvenzl/oracle-free`, same Oracle version) |
 | GitHub Actions | `.github/workflows/*.yml` |
 | Bootstrap, Bootstrap Icons | CDN URLs and `integrity` hashes in `src/main/resources/templates/fragments/layout.html` |
 | Chart.js | CDN URL and `integrity` hash in the analytics template (`templates/payments/`) and in `docs/view-conventions.md` |

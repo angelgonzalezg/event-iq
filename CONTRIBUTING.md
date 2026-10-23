@@ -40,11 +40,15 @@ Run `git config core.hooksPath .githooks` once after cloning: it adds the `EIQ-<
 - Link the issue with `Closes #<issue>` in the description.
 - Use the PR template: Overview, Developer/Reviewer checklist, Documentation impact, How to test.
 - Keep PRs small. Reviews happen within one business day.
-- Merge the latest `main` and confirm the app starts before opening a PR.
+- Merge the latest `main`, confirm the app starts and run the tests before opening a PR: `./mvnw verify`, plus `uv run pytest` if you changed the analytics service.
 
 ## Views
 
 New pages reuse the shared layout and keep their texts in the module's message file. Routes, templates, alerts and styles are described in [`docs/view-conventions.md`](docs/view-conventions.md).
+
+## Tests
+
+New logic and endpoints arrive with their tests in the same PR: unit tests with Mockito for services, `@WebMvcTest` for controllers, an `*IT` against Oracle for custom queries, and pytest for the analytics service. What to test, with which tool, and the naming conventions are in [`docs/testing.md`](docs/testing.md).
 
 ## Dependencies
 
