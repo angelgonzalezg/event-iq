@@ -10,12 +10,17 @@
 /src/main/java/com/eventiq/security/          @euresticaesar
 /src/main/resources/templates/events/         @euresticaesar
 /src/main/resources/i18n/events.properties    @euresticaesar
+/src/test/java/com/eventiq/events/            @euresticaesar
+/src/test/java/com/eventiq/ai/                @euresticaesar
+/src/test/java/com/eventiq/security/          @euresticaesar
 
 # Payments & Analytics — Gianina
 /src/main/java/com/eventiq/payments/          @nahomigianina
 /src/main/java/com/eventiq/analytics/         @nahomigianina
 /src/main/resources/templates/payments/       @nahomigianina
 /src/main/resources/i18n/payments.properties  @nahomigianina
+/src/test/java/com/eventiq/payments/          @nahomigianina
+/src/test/java/com/eventiq/analytics/         @nahomigianina
 /analytics-service/                           @nahomigianina
 
 # Shared schema: both engineers review

@@ -27,7 +27,8 @@ Each module was built end-to-end by one student: data model, Java CRUD, web view
 | Analytics | Python 3.14 managed with [uv](https://docs.astral.sh/uv/), FastAPI, python-oracledb, pandas, scikit-learn, TextBlob |
 | Frontend | Thymeleaf, Bootstrap 5, Bootstrap Icons, Chart.js (loaded from a CDN, no frontend build) |
 | Database | Oracle Database Free |
-| Infrastructure | Docker, Docker Compose, GitHub Actions (build check) |
+| Infrastructure | Docker, Docker Compose, GitHub Actions (build and tests) |
+| Testing | JUnit 5, Mockito, MockMvc, Testcontainers with Oracle Database Free, pytest |
 | API docs | Postman |
 
 Exact dependency versions are defined in `pom.xml` and `analytics-service/uv.lock`.
@@ -69,6 +70,7 @@ The main technical decisions are recorded as ADRs in [`docs/adr/`](docs/adr/READ
 | [ADR-006](docs/adr/006-functional-modules-owned-end-to-end.md) | Functional modules owned end to end by one engineer | Accepted |
 | [ADR-007](docs/adr/007-uv-for-python-dependencies.md) | uv for Python and the analytics service dependencies | Accepted |
 | [ADR-008](docs/adr/008-pinned-versions.md) | Pinned versions everywhere, changed only through pull requests | Accepted |
+| [ADR-009](docs/adr/009-layered-testing-strategy.md) | Layered tests, with Oracle Database Free in Testcontainers | Proposed |
 
 ---
 
@@ -167,13 +169,22 @@ The app runs at `http://localhost:8080`. The analytics API docs are at `http://l
 
 Import the collections in `postman/` (one per module). Call `POST /api/auth/login` and send the returned token as `Authorization: Bearer <token>`.
 
+### 5. Run the tests
+
+```bash
+./mvnw verify                             # needs Docker: repository tests start their own Oracle container
+cd analytics-service && uv run pytest
+```
+
+`./mvnw test` runs only the unit and controller tests, in seconds and without Docker. What to test, and how, is in [`docs/testing.md`](docs/testing.md).
+
 ---
 
 ## Project Structure
 
 ```
 event-iq/
-├── .github/            # CODEOWNERS, PR template, build check workflow
+├── .github/            # CODEOWNERS, PR template, build and test workflow
 ├── src/main/java/com/eventiq/
 │   ├── events/         # Events & Attendees module
 │   ├── payments/       # Payments & Reports module
@@ -186,13 +197,14 @@ event-iq/
 │   ├── static/         # CSS and images
 │   ├── i18n/           # UI texts: shared, events and payments
 │   └── application.yml
-├── analytics-service/  # FastAPI analytics service and seed_data.py
+├── src/test/java/com/eventiq/   # tests, in the same packages as the code they test
+├── analytics-service/  # FastAPI analytics service and seed_data.py; pytest tests in tests/
 ├── db/
 │   ├── schema.sql      # shared Oracle tables, constraints and indexes
 │   └── drop.sql        # destructive development reset
 ├── postman/
 ├── scripts/            # check-setup.sh: verifies a local setup
-├── docs/               # onboarding, ways of working, view conventions, setup troubleshooting, ADRs, contributions, analysis notebook
+├── docs/               # onboarding, ways of working, view conventions, testing, setup troubleshooting, ADRs, contributions, analysis notebook
 │   └── er-diagram.md   # shared data model and database conventions
 ├── docker-compose.yml
 ├── .env.example
@@ -219,7 +231,8 @@ Individual write-ups are in [`docs/contributions.md`](docs/contributions.md).
 Both modules were developed in parallel:
 
 - Each student owns their module's packages and folders; ownership is enforced through [`CODEOWNERS`](.github/CODEOWNERS).
-- `main` is protected: every change arrives through a pull request that must pass the build check and be approved by the other student.
+- `main` is protected: every change arrives through a pull request that must pass the build and test checks and be approved by the other student.
+- New logic arrives with its tests: unit tests with Mockito, `@WebMvcTest` controllers, repository tests against Oracle with Testcontainers, and pytest for the analytics service; see [`docs/testing.md`](docs/testing.md).
 - Each branch maps to one issue (`feature/<issue>-<topic>`), and every commit starts with the issue key: `EIQ-<issue> <type>(<scope>): <summary>`, based on [Conventional Commits](https://www.conventionalcommits.org). Git hooks and a CI check enforce the format; see [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
@@ -230,7 +243,7 @@ Both modules were developed in parallel:
 - Model evaluation (train/test split, R², MAE) and additional features
 - Multilingual sentiment analysis with a Hugging Face model
 - Select AI exploration (Autonomous Database): native natural-language-to-SQL vs. the Spring AI implementation
-- Automated tests in CI and deployment to Oracle Cloud Infrastructure
+- Deployment to Oracle Cloud Infrastructure
 
 ---
 
