@@ -210,9 +210,9 @@ if [ "$QUICK" = false ]; then
   if [ -z "$JAVA_BIN" ]; then
     fail "skipped the Java build: Maven is not running on Java 25"
   elif ./mvnw -B verify >"$LOG_DIR/maven.log" 2>&1; then
-    pass "Java build and tests pass (./mvnw verify)"
+    pass "Java build and tests pass, including the Oracle tests (./mvnw verify)"
   else
-    fail "./mvnw verify failed" "see $LOG_DIR/maven.log"
+    fail "./mvnw verify failed" "see $LOG_DIR/maven.log and $HELP_DOC"
     JAVA_BIN=""
   fi
 
@@ -222,6 +222,11 @@ if [ "$QUICK" = false ]; then
   elif (cd analytics-service && uv sync --locked) >"$LOG_DIR/uv.log" 2>&1; then
     ANALYTICS_OK=true
     pass "analytics service dependencies installed (uv sync --locked)"
+    if (cd analytics-service && uv run pytest -q) >"$LOG_DIR/pytest.log" 2>&1; then
+      pass "analytics service tests pass (uv run pytest)"
+    else
+      fail "uv run pytest failed" "see $LOG_DIR/pytest.log"
+    fi
   else
     fail "uv sync --locked failed" "see $LOG_DIR/uv.log"
   fi
