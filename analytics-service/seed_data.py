@@ -1,10 +1,14 @@
 import sys
 import random
+import unicodedata # for normalization
 from datetime import datetime, timedelta, timezone
 from database import get_connection
 
 # Seed the random number generator for reproducibility
-random.seed(42)
+if "--seed" in sys.argv:
+    random.seed(42)
+else:
+    random.seed()
 
 def get_utc_now():
     """Returns the current date and time in UTC without a time zone for Oracle DATE compatibility"""
@@ -53,16 +57,13 @@ def seed():
     # TABLE EVENTS ~50
     # Declare synthetic event names (with prefixes and suffixes)
     categories = {
-        "Music": ["Música del Sol", "Ritmos Urbanos", "Indie Sound", "Voces del Bajío", "Jazz y Café"],
-        "Technology": ["Innovación Digital", "Desarrollo y Software", "Robótica y Futuro", "E-Sports & Gaming MX"],
-        "Culture and Arts": ["Cultura Nahua", "Arte y Diseño", "Cine y Creatividad", "Teatro Callejero"],
-        "Cuisine": ["Sabor y Tradición", "Gastronomía Mexicana", "Cerveza Artesanal"],
-        "Sports": ["Luchadores del Norte", "Maratón Nocturno"],
-        "Community": ["Emprendedores MX", "Sostenibilidad y Tierra"]
+        "Music": ["Festival Sonorama", "Encuentro de Música Independiente", "Cumbre de Rock Alternativo", "Festival Acústico Metropolitano", "Noches de Jazz y Blues"],
+        "Technology": ["Congreso de Ingeniería de Software", "Foro de Innovación y Tecnología", "Encuentro de Desarrolladores", "Expo Ciberseguridad y Datos", "DevSummit Latam"],
+        "Culture and Arts": ["Feria del Libro y las Artes", "Muestra de Arte Contemporáneo", "Festival de Cine Independiente", "Encuentro de Teatro Urbano", "Exposición de Diseño y Creatividad"],
+        "Cuisine": ["Festival Gastronómico del Bajío", "Expo Cerveza Artesanal", "Encuentro de Cocina Tradicional", "Feria del Sabor y Vino", "Ruta Culinaria Nacional"],
+        "Sports": ["Medio Maratón Metropolitano", "Torneo Nacional de Pádel", "Copa Regional de Ciclismo", "Carrera Atlética por la Salud", "Festival Deportivo de Verano"],
+        "Community": ["Foro de Emprendimiento e Innovación", "Cumbre de Liderazgo Juvenil", "Encuentro de Startups y Negocios", "Jornada de Sostenibilidad Urbana", "Congreso de Impacto Social"]
     }
-
-    prefixes = ["Expo", "Festival", "Conferencia", "Foro", "Encuentro", "Congreso", "Copa", "Noche de", "Simposio", "Torneo"]
-    suffixes = ["México", "Latam", "Frontera", "del Pacífico", "Central", "Nacional"]
 
     descriptions = {
         "Music": [
@@ -98,22 +99,29 @@ def seed():
     cities = ["Ciudad de México", "Guadalajara", "Monterrey", "Puebla", "Tijuana", "Mérida", "Cancún", "Querétaro"]
 
     events = []
-    seen_names = set()
+
+    # Fetch existing event combinations from database to prevent duplicates if not truncated
+    cursor.execute("SELECT name, location FROM events")
+    seen_event = {(row[0], row[1]) for row in cursor.fetchall()}
+
     start_date = datetime(2027, 1, 1) #The events start to be generated after 2026 
 
-    # Generate events
+    # Generate events allowing tour dates across different cities
     while len(events) < 50:
         cat = random.choice(list(categories.keys()))
         theme = random.choice(categories[cat])
-        name = f"{random.choice(prefixes)} {theme} {random.choice(suffixes)} 2027"
+        name = random.choice(categories[cat])
+        location = f"{random.choice(cities)}, México"
 
-        if name not in seen_names: # If the name is not repeated, we insert it directly in the database
-            seen_names.add(name)
+        # Ensure the exact same event name doesn't repeat in the same city
+        event_key = (name, location)
+
+        if event_key not in seen_event:
+            seen_event.add(event_key)
             
             event_date = start_date + timedelta(days=random.randint(0, 365)) # Random date in 2027
             capacity = random.choice([100, 250, 500, 1000, 1500, 2500, 5000, 10000, 30000, 50000]) 
             description = random.choice(descriptions[cat])
-            location = f"{random.choice(cities)}, México"
 
             event_id_var = cursor.var(int)
             cursor.execute(
@@ -136,14 +144,24 @@ def seed():
     
     for event in events:
         event_id = event["id"]
+
+        # Check if ticket_types for the event have already been created 
+        cursor.execute("SELECT COUNT(*) FROM ticket_types WHERE event_id = :1", (event_id,))
+        if cursor.fetchone()[0] > 0:
+            continue # If already have them, skip them to avoid duplicates
+
+        free_event = random.random() <= 0.20 # Define if the event is 100% free
         
         for ticket_name in ticket_types_names:
-            if ticket_name == "General":
-                price = 0 if random.random() < 0.05 else random.randrange(150, 351, 50) # 5% probability of free tickets
-            elif ticket_name == "Student":
-                price = 0 if random.random() < 0.15 else random.randrange(50, 101, 25) # 15% probability of free tickets
-            elif ticket_name == "VIP":
-                price = random.randrange(400, 1501, 100)
+            if free_event:
+                price = 0
+            else:
+                if ticket_name == "General":
+                    price = 0 if random.random() < 0.05 else random.randrange(150, 351, 50) # 5% probability of free tickets
+                elif ticket_name == "Student":
+                    price = 0 if random.random() < 0.15 else random.randrange(50, 101, 25) # 15% probability of free tickets
+                elif ticket_name == "VIP":
+                    price = random.randrange(400, 1501, 100)
 
             cursor.execute(
                 """
@@ -169,15 +187,47 @@ def seed():
     "Rojas", "Guerrero", "Morales", "Jiménez", "Romero", "Navarro", "Domínguez", "Cabrera", "Molina", "Pacheco", "Salazar", "Cortés", 
     "Vega", "Paredes", "Campos", "Delgado", "Soto"]
 
-    seen_name = set()
     attendees = []
+
+    # Fetch existing emails and names into sets to prevent duplicate insertions
+    cursor.execute("SELECT LOWER(email) FROM attendees")
+    existing_emails = {row[0] for row in cursor.fetchall() if row[0]}
+    
+    cursor.execute("SELECT LOWER(name) FROM attendees")
+    seen_names = {row[0] for row in cursor.fetchall() if row[0]}
+
+    # We normalize the email addresses and they contain existing domains 
+    email_domain = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com", "live.com"]
+    separators = [".", "_", "-"]
+
+    def normalize_email_part(value):
+        value = unicodedata.normalize("NFKD", value)
+        value = "".join(ch for ch in value if not unicodedata.combining(ch))
+        value = value.replace("'", "").replace("’", "")
+        value = "".join(ch for ch in value.lower() if ch.isalnum())
+        return value or "attendee"
 
     while len(attendees) < 200:
         first_name = random.choice(first_names)
         last_name = random.choice(last_names)
         name = f"{first_name} {last_name}"
 
-        email = f"{first_name.lower()}.{last_name.lower()}@eventiq.com"
+        # Avoid identical duplicate names
+        if name.lower() in seen_names:
+            continue
+        seen_names.add(name.lower())
+
+        first = normalize_email_part(first_name)
+        last = normalize_email_part(last_name)
+
+        while True:
+            separator = random.choice(separators)
+            number = str(random.randint(0, 999)) if random.random() <= 0.45 else ""
+            local_part = f"{first}{separator}{last}{number}"
+            email = f"{local_part}@{random.choice(email_domain)}".lower()
+            if email not in existing_emails:
+                existing_emails.add(email)
+                break
 
         # Generate phone number
         if random.choice([True, False]):
@@ -186,62 +236,88 @@ def seed():
         else: 
             lada = f"{random.randint(0,9)}{random.randint(0,9)}{random.randint(0,9)}"
             local = random.randint(1000000, 9999999)
-        phone_number = f"+52 {lada} {local}"
+        phone_number = f"{lada}{local}"
 
-        if name not in seen_name:
-            seen_name.add(name)
+        attendee_id_var = cursor.var(int)
+        cursor.execute(
+            """
+            INSERT INTO attendees (name, email, phone)
+            VALUES (:1, :2, :3)
+            RETURNING attendee_id INTO :4
+            """,
+            (name, email, phone_number, attendee_id_var)
+        )
 
-            attendee_id_var = cursor.var(int)
-            cursor.execute(
-                """
-                INSERT INTO attendees (name, email, phone)
-                VALUES (:1, :2, :3)
-                RETURNING attendee_id INTO :4
-                """,
-                (name, email, phone_number, attendee_id_var)
-            )
-
-            attendee_id = attendee_id_var.getvalue()[0]
-            attendees.append(attendee_id)
+        attendee_id = attendee_id_var.getvalue()[0]
+        attendees.append(attendee_id)
             
     print("Attendees created successfully!")
 
-    # TABLE REGISTRATIONS ~800
+    # TABLE REGISTRATIONS ~800 
     print("Generating registrations...")
     registrations = []
+    cursor.execute("SELECT event_id, attendee_id FROM registrations")
     seen_registrations = set()
 
-    while len(registrations) < 800:
-        event = random.choice(events)
+    target_total = 800
+    total_capacity = sum(e["capacity"] for e in events)
+
+    # 1. Calculate the exact registration quota for each event based on its capacity
+    event_quotas = {}
+    current_sum = 0
+
+    for event in events:
+        event_id = event["id"]
+        # Proportion with a guaranteed minimum of 1 registration per event
+        quota = max(1, round(target_total * (event["capacity"] / total_capacity)))
+        event_quotas[event_id] = quota
+        current_sum += quota
+
+    # 2. Adjust rounding difference so the total equals exactly 800
+    diff = target_total - current_sum
+    if diff != 0:
+        # Add or subtract the difference to the event with the largest capacity
+        largest_event = max(events, key=lambda x: x["capacity"])
+        event_quotas[largest_event["id"]] += diff
+
+    # 3. Generate registrations by iterating over the calculated quotas for each event
+    for event in events:
         event_id = event["id"]
         event_date = event["date"]
+        quota = event_quotas[event_id]
 
-        attendee_id = random.choice(attendees)
+        # Randomize available attendees for this event
+        available_attendees = list(attendees)
+        random.shuffle(available_attendees)
 
-        # Check if already registered
-        if (event_id, attendee_id) not in seen_registrations:
+        generated_for_event = 0
+        while generated_for_event < quota and available_attendees:
+            attendee_id = available_attendees.pop()
+            
+            # Skip if this registration pair already exists in DB
+            if (event_id, attendee_id) in seen_registrations:
+                continue
+                
             seen_registrations.add((event_id, attendee_id))
+            generated_for_event += 1
 
-            # Registration date (up to 90 days before)
+            # Registration date (up to 90 days before the event)
             registered_at = event_date - timedelta(days=random.randint(1, 90))
 
             # Status: 80% confirmed, 10% pending, 10% cancelled
             status_val = random.random()
-            if status_val < 0.8:
+            if status_val <= 0.8:
                 status = "confirmed"
-            elif status_val < 0.9:
+            elif status_val <= 0.9:
                 status = "pending"
             else: 
                 status = "cancelled"
 
-            # Cancellation date logic in UTC
+            # Cancellation date logic
             cancelled_at = None
             if status == "cancelled":
                 days_diff = (event_date - registered_at).days
-                if days_diff > 0:
-                    cancelled_at = registered_at + timedelta(days=random.randint(1, days_diff))
-                else:
-                    cancelled_at = registered_at
+                cancelled_at = registered_at + timedelta(days=random.randint(1, days_diff)) if days_diff > 0 else registered_at
 
             registration_id_var = cursor.var(int)
             cursor.execute(
@@ -263,7 +339,7 @@ def seed():
                 "event_date": event_date
             })
 
-    print("Registrations created successfully!")
+    print(f"Registrations created successfully!")
 
    # TABLE PAYMENTS ~800 
     print("Generating payments...")
@@ -273,8 +349,10 @@ def seed():
         registration_id = registration["id"]
         event_id = registration["event_id"]
         status = registration["status"]
+        registered_at = registration["registered_at"]
+        event_date = registration["event_date"]
 
-        # Fetch ticket types for this event to get consistent prices
+        # Fetch ticket types for this event to get consistent prices and ticket_type_id
         cursor.execute(
             """
             SELECT ticket_type_id, price FROM ticket_types WHERE event_id = :1
@@ -283,15 +361,12 @@ def seed():
         )
         ticket_rows = cursor.fetchall()
 
-        if ticket_rows:
-            chosen_ticket = random.choice(ticket_rows)
-            ticket_type_id = chosen_ticket[0]
-            amount = chosen_ticket[1] 
-        else:
-            ticket_type_id = 1
-            amount = 250.00
+        # Randomly choose a ticket type for the registration
+        chosen_ticket = random.choice(ticket_rows)
+        ticket_type_id = chosen_ticket[0]
+        amount = chosen_ticket[1]  # If the event is free, this will be 0
 
-        # Registration status to payment status
+        # Map registration status to payment status
         if status == "confirmed":
             payment_status = "paid"
         elif status == "pending":
@@ -299,18 +374,16 @@ def seed():
         else: # cancelled
             payment_status = "refunded"
 
-        # Date logic consistent with table CHECK constraints in UTC
+        # Set payment and refund dates based on payment status
         paid_at = None
         refunded_at = None
 
         if payment_status in ["paid", "refunded"]:
-            paid_at = registration.get("registered_at") + timedelta(days=random.randint(0, 3))
+            paid_at = registered_at + timedelta(days=random.randint(0, 3))
             
         if payment_status == "refunded":
-            if paid_at:
-                refunded_at = paid_at + timedelta(days=random.randint(1, 10))
-            else:
-                refunded_at = datetime.now()
+            max_days_to_refund = max(1, (event_date - paid_at).days) if event_date > paid_at else 1
+            refunded_at = paid_at + timedelta(days=random.randint(1, min(max_days_to_refund, 10)))
 
         cursor.execute(
             """
@@ -318,18 +391,13 @@ def seed():
             VALUES (:1, :2, :3, :4, :5, :6, :7)
             """,
             (registration_id, ticket_type_id, event_id, amount, paid_at, refunded_at, payment_status)
-        )
+            )
         payments_count += 1
 
-    print(f"Payments created successfully! ({payments_count} payments)")
+    print(f"Payments created successfully!")
 
     # TABLE COMMENTS ~200
     print("Generating comments...")
-
-    event_types = [
-        "conference", "festival", "summit", "workshop", "symposium",
-        "convention", "expo", "gathering", "forum", "event"
-    ]
 
     aspects = [
         "speakers", "venue", "audio quality", "scheduling",
@@ -342,83 +410,85 @@ def seed():
     sentiment_data = {
         "positive": {
             "openings": [
-                "I really enjoyed attending this", "I had a wonderful experience at this", "I was impressed by this", "I would gladly recommend this", "I absolutely loved this",
-                "I had a fantastic time at this", "I was pleasantly surprised by this", "I would happily attend another", "I found this", "Overall, I really appreciated this",
-                "I am so glad I joined this", "I truly appreciated taking part in this", "I found great value in this", "I would easily call this", "I was deeply inspired by this",
-                "Participating in this", "Joining this", "I felt thoroughly engaged during this", "I consider this", "My time spent at this"
+                "I really enjoyed attending", "I had a wonderful experience at", "I was impressed by", "I would gladly recommend", "I absolutely loved",
+                "I had a fantastic time at", "I was pleasantly surprised by", "I would happily attend another edition of", "I found great value in", "Overall, I really appreciated",
+                "I am so glad I joined", "I truly appreciated taking part in", "Participating in", "Joining", "I felt thoroughly engaged during"
             ],
             "evaluations": [
                 "was excellent", "was exceptionally well organized", "made the experience memorable", "exceeded my expectations", "was handled brilliantly",
                 "deserved special praise", "contributed greatly to the experience", "was one of the highlights", "made everything more enjoyable", "was truly impressive",
-                "stood out remarkably well", "was executed with great professionalism", "brought incredible energy", "left a lasting positive impression", "was exceptionally rewarding",
-                "ran smoothly from start to finish", "showcased great talent", "was a huge success", "delivered top-notch quality", "offered fantastic insights"
+                "stood out remarkably well", "was executed with great professionalism", "brought incredible energy", "left a lasting positive impression", "was exceptionally rewarding"
             ],
             "closings": [
                 "I would definitely return.", "The organizers did a fantastic job.", "It was worth my time.", "I left with a great impression.", "I would recommend it to others.",
                 "Everything felt well coordinated.", "I hope they organize it again.", "It was a rewarding experience.", "I would gladly participate again.", "Overall, I was very satisfied.",
-                "It was an absolute success.", "I look forward to the next one.", "Everything went completely smoothly.", "The outcome was wonderful.", "I am very happy with how it turned out.",
-                "Truly a remarkable event.", "I couldn't have asked for more.", "Brilliant work by everyone involved.", "It exceeded all my hopes.", "I'm leaving with a huge smile."
+                "It was an absolute success.", "I look forward to the next one.", "Everything went completely smoothly.", "The outcome was wonderful.", "I am very happy with how it turned out."
             ]
         },
         "neutral": {
             "openings": [
-                "My experience at this", "I thought this", "Overall, this", "In my opinion, this", "After attending this",
-                "I found this", "For the most part, this", "Looking back, this", "I would describe this", "My overall impression of this",
-                "As a participant, this", "Taking everything into account, this", "Reflecting on this", "From my perspective, this", "Generally speaking, this",
-                "Observing how this", "Dealing with this", "When evaluating this", "To my mind, this", "Considered as a whole, this"
+                "My experience at", "I thought", "Overall,", "In my opinion,", "After attending",
+                "I found", "For the most part,", "Looking back at", "I would describe", "My overall impression of"
             ],
             "evaluations": [
                 "was acceptable", "was fairly average", "met basic expectations", "was neither impressive nor terrible", "was reasonably organized",
-                "had some noticeable limitations", "was adequate for the occasion", "was satisfactory overall", "was ordinary", "left room for improvement",
-                "was passable", "stood out in no particular way", "met standard criteria", "was fairly straightforward", "had its ups and downs",
-                "felt a bit standard", "offered a mixed performance", "was fine on most accounts", "was relatively conventional", "showed typical results"
+                "had some noticeable limitations", "was adequate for the occasion", "was satisfactory overall", "was ordinary", "left room for improvement"
             ],
             "closings": [
                 "It was an average experience.", "Some aspects could be improved.", "I have mixed feelings about it.", "It was neither especially good nor bad.", "I did not find it particularly memorable.",
-                "It met most basic expectations.", "There were both strengths and weaknesses.", "I would consider attending again.", "The overall experience was reasonable.", "I have no strong opinion about it.",
-                "It was okay overall.", "Nothing particularly stood out.", "It was fine for a single visit.", "It met the minimum requirements.", "The results were quite standard.",
-                "It did the job.", "Nothing too surprising happened.", "It was an ordinary affair.", "I expected slightly more, but it was fine.", "It sits right in the middle."
+                "It met most basic expectations.", "There were both strengths and weaknesses.", "I would consider attending again.", "The overall experience was reasonable.", "I have no strong opinion about it."
             ]
         },
         "negative": {
             "openings": [
-                "I was disappointed by this", "I had a frustrating experience at this", "I would not recommend this", "I expected much more from this", "Unfortunately, this",
-                "I was dissatisfied with this", "I regret attending this", "I had a poor experience at this", "I found this", "My experience with this",
-                "To be honest, this", "Looking back at this", "Based on what I saw, this", "Right from the start, this", "Much to my dismay, this",
-                "Having participated in this", "Observing the flaws in this", "To my disappointment, this", "Attempting to enjoy this", "In all fairness, this"
+                "I was disappointed by", "I had a frustrating experience at", "I would not recommend", "I expected much more from", "Unfortunately,",
+                "I was dissatisfied with", "I regret attending", "I had a poor experience at", "I found", "My experience with"
             ],
             "evaluations": [
                 "was poorly organized", "was extremely disappointing", "caused several problems", "fell below expectations", "was handled badly",
-                "made the experience frustrating", "was a major letdown", "seriously affected the experience", "needed substantial improvement", "was difficult to tolerate",
-                "left much to be desired", "was quite chaotic", "was poorly managed throughout", "fell short on multiple fronts", "proved to be quite bothersome",
-                "lacked proper planning", "created unnecessary headaches", "was riddled with mistakes", "showed a lack of attention", "left a bad taste"
+                "made the experience frustrating", "was a major letdown", "seriously affected the experience", "needed substantial improvement", "was difficult to tolerate"
             ],
             "closings": [
                 "I would not attend again.", "The organizers need to improve.", "It was not worth my time.", "I left with a negative impression.", "Too many things went wrong.",
-                "I expected much better quality.", "I would not recommend it to others.", "The experience could have been much better.", "I was unhappy with the outcome.", "I hope they address these problems.",
-                "It needs a complete overhaul.", "I am glad it is over.", "The overall outcome was unacceptable.", "I would steer clear next time.", "It failed to meet basic standards.",
-                "A truly regrettable choice.", "They really need to step up their game.", "I won't be back anytime soon.", "Such a waste of potential.", "Completely missed the mark."
+                "I expected much better quality.", "I would not recommend it to others.", "The experience could have been much better.", "I was unhappy with the outcome.", "I hope they address these problems."
             ]
         }
     }
 
-    # Generate a large pool of distinct comments for each sentiment
+    # Ensure that 200 registrations are available
+    target_registrations = registrations[:200]
+
+    if len(target_registrations) < 200:
+        raise ValueError(
+            f"Only {len(target_registrations)} registrations are available. "
+            "At least 200 are required."
+        )
+
+    # Fetch event names dynamically from the database to map comments accurately
+    event_names_map = {}
+    for reg in target_registrations:
+        ev_id = reg["event_id"]
+        if ev_id not in event_names_map:
+            cursor.execute("SELECT name FROM events WHERE event_id = :1", (ev_id,))
+            row = cursor.fetchone()
+            event_names_map[ev_id] = row[0] if row else "the event"
+
+    # Build unique combinations using the real event names dynamically
     def build_unique_combinations(sentiment):
         data = sentiment_data[sentiment]
         combinations = set()
 
         for opening in data["openings"]:
-            for event_type in event_types:
+            for ev_id, event_name in event_names_map.items():
                 for aspect in aspects:
                     for evaluation in data["evaluations"]:
                         for closing in data["closings"]:
                             comment = (
-                                f"{opening} {event_type}. "
+                                f"{opening} '{event_name}'. "
                                 f"The {aspect} {evaluation}. "
                                 f"{closing}"
                             )
-
-                            combinations.add(comment)
+                            combinations.add((ev_id, comment))
 
         return list(combinations)
 
@@ -432,26 +502,24 @@ def seed():
     random.shuffle(negative_list)
 
     selected_comments = (
-        [(comment, "positive") for comment in positive_list[:120]]
-        + [(comment, "neutral") for comment in neutral_list[:50]]
-        + [(comment, "negative") for comment in negative_list[:30]]
+        [(ev_id, comment, "positive") for ev_id, comment in positive_list[:120]]
+        + [(ev_id, comment, "neutral") for ev_id, comment in neutral_list[:50]]
+        + [(ev_id, comment, "negative") for ev_id, comment in negative_list[:30]]
     )
 
     random.shuffle(selected_comments)
 
-    # Ensure that 200 registrations are available
-    target_registrations = registrations[:200]
-
-    if len(target_registrations) < 200:
-        raise ValueError(
-            f"Only {len(target_registrations)} registrations are available. "
-            "At least 200 are required."
-        )
-
     # Verify uniqueness across the entire selected dataset
     used_comments = set()
+    comments_count = 0
+    expected_sentiments = {}
 
-    for content, sentiment in selected_comments:
+    for reg, (ev_id, content, sentiment) in zip(target_registrations, selected_comments):
+        attendee_id = reg["attendee_id"]
+        # Ensure we bind the comment to the exact event registration context
+        event_id = reg["event_id"] 
+        event_date = reg["event_date"]
+
         normalized_content = " ".join(content.casefold().split())
 
         if normalized_content in used_comments:
@@ -459,22 +527,8 @@ def seed():
 
         used_comments.add(normalized_content)
 
-    expected_sentiments = {}
-    comments_count = 0
-
-    for reg, (content, sentiment) in zip(
-        target_registrations, selected_comments
-    ):
-        event_id = reg["event_id"]
-        attendee_id = reg["attendee_id"]
-        event_date = reg["event_date"]
-
         #  Created_at in UTC is created after the event date and fourteen days after
-        created_at = event_date + timedelta(
-            days=random.randint(0, 14),
-            hours=random.randint(0, 23),
-            minutes=random.randint(0, 59)
-        )
+        created_at = event_date + timedelta(days=random.randint(0, 14), hours=random.randint(0, 23), minutes=random.randint(0, 59))
 
         cursor.execute(
             """

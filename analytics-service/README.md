@@ -30,4 +30,8 @@ Before working on sentiment analysis, download the TextBlob corpora once: `uv ru
 The database seeding script generates realistic synthetic data (~50 events, ~200 attendees, ~800 registrations with payments, and ~200 comments) for development and model training purposes. You can populate the database by running:
 
 ```bash
+# To run a fully randomized seed (with table truncation)
 uv run python seed_data.py --truncate
+
+# To run with a fixed random seed for reproducibility
+uv run python seed_data.py --truncate --seed
