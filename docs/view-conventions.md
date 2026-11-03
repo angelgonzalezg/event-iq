@@ -177,7 +177,7 @@ A form field with its validation error:
 
 ## Testing views
 
-Test view controllers with `@WebMvcTest`, which starts only the web layer. `@WithMockUser` signs in a test user, so the test does not depend on the security configuration; replace services with `@MockitoBean`. `config/HomeControllerTests` is the reference:
+Test view controllers with `@WebMvcTest`, which starts only the web layer. `@WithMockUser` signs in a test user, so the test does not depend on the security configuration; replace services with `@MockitoBean`. `config/HomeControllerTests` is the reference, and [`testing.md`](testing.md) covers the other kinds of tests:
 
 ```java
 @WebMvcTest(EventController.class)
@@ -198,3 +198,19 @@ class EventControllerTests {
     }
 }
 ```
+
+When a page depends on Gemini or the analytics service, also test that it degrades gracefully: make the mocked service throw and check that the page still renders with `serviceWarning`. This is the automated version of the resilience drill:
+
+```java
+@Test
+void dashboardWarnsWhenTheAnalyticsServiceIsDown() throws Exception {
+    when(this.analyticsClient.revenueByEvent()).thenThrow(new ResourceAccessException("Connection refused"));
+
+    this.mvc.perform(get("/analytics"))
+        .andExpect(status().isOk())
+        .andExpect(view().name("payments/analytics"))
+        .andExpect(model().attribute("serviceWarning", "analytics.unavailable"));
+}
+```
+
+POST requests in these tests need `.with(csrf())`, because CSRF protection is on for views.

@@ -12,3 +12,14 @@ dependencies = [
     "textblob==0.20.1",
     "uvicorn[standard]==0.54.0",
 ]
+
+[dependency-groups]
+dev = [
+    "httpx2==2.16.0",
+    "pytest==9.1.1",
+]
+
+# Tests import the service modules (main, prediction, ...) from this folder; see docs/testing.md
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

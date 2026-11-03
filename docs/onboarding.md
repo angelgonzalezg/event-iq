@@ -109,7 +109,7 @@ The script checks everything below and prints ✔ or ✘ for each item, with a h
 | Tools | Git, curl, Docker and uv are installed; `./mvnw` runs on Java 25; Docker is running and has enough memory |
 | Configuration | Git hooks are enabled; `.env` exists, has the required values and no quotes or trailing comments; no exported variable overrides it |
 | Database | The `oracle-free` container runs the pinned image for your architecture, and `app_user` can log in to `FREEPDB1` |
-| Build and tests | `./mvnw verify` passes and `uv sync --locked` installs the analytics service |
+| Build and tests | `./mvnw verify` passes, including the repository tests, which start their own Oracle container (the first run downloads its image); `uv sync --locked` installs the analytics service and `uv run pytest` passes |
 | Smoke test | It starts both services for a few seconds: `GET /health` answers `200` with the database up, the home page renders and static files are served |
 
 `scripts/check-setup.sh --quick` checks only tools, configuration and the database, which takes a few seconds. Run the full check again after changing your setup or pulling changes to the tooling.

@@ -5,5 +5,8 @@ __pycache__/
 .pytest_cache/
 .ipynb_checkpoints/
 
+# Tests run in CI and locally, not in the image
+tests/
+
 # Secrets never go into the image; Docker Compose passes them as environment variables
 .env

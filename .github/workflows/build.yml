@@ -26,6 +26,7 @@ jobs:
           java-version: '25'
           cache: maven
 
+      # Runs the unit and integration tests
       - name: Build and test
         run: ./mvnw -B verify
 
@@ -49,3 +50,6 @@ jobs:
 
       - name: Compile sources
         run: uv run python -m compileall -q -x '/\.venv/' .
+
+      - name: Run tests
+        run: uv run pytest

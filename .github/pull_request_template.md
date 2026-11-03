@@ -14,13 +14,15 @@ Closes #
 <td valign="top">
 
 - [ ] Meets the issue's acceptance criteria
-- [ ] Tested locally
+- [ ] Tests added or updated (`docs/testing.md`)
+- [ ] Tested locally: tests pass and the feature works
 - [ ] Self-reviewed the diff
 
 </td>
 <td valign="top">
 
 - [ ] Tested locally
+- [ ] Tests cover the acceptance criteria
 - [ ] Clear, scoped to the issue
 - [ ] Left useful feedback
 

@@ -329,6 +329,59 @@ java.lang.UnsupportedClassVersionError: com/eventiq/EventIqApplication has been 
 
 ---
 
+## Tests
+
+How the tests are organized is in [Testing](testing.md). These are the setup problems they can run into.
+
+### Could not find a valid Docker environment
+
+```text
+java.lang.IllegalStateException: Could not find a valid Docker environment. Please see logs and check configuration
+```
+
+**Cause:** `./mvnw verify` runs the repository tests (`*IT`), which start their own Oracle container with Testcontainers, and Docker is not running or Testcontainers cannot find it.
+
+**Fix:** start Docker and check that `docker info` answers. Docker Desktop works as is; with Rancher Desktop, Colima or Podman, Testcontainers may need `DOCKER_HOST` and a socket override, as described in its [supported Docker environments](https://java.testcontainers.org/supported_docker_environment/). Meanwhile, `./mvnw test` runs the tests that do not need Docker.
+
+### The first ./mvnw verify takes several minutes
+
+**Cause:** the first run downloads the Oracle test image, `gvenzl/oracle-free:23.26.3-slim-faststart`. After that, each run spends some seconds starting the container.
+
+**Fix:** let the first run finish; later runs reuse the image. To download it ahead of time, run `docker pull gvenzl/oracle-free:23.26.3-slim-faststart`. While coding, `./mvnw test` gives faster feedback, and `./mvnw verify` runs everything before the pull request.
+
+### db/schema.sql failed in the test database
+
+```text
+java.lang.IllegalStateException: db/schema.sql failed in the test database:
+```
+
+**Cause:** `OracleTestDatabase` creates the tables by running `db/schema.sql` with SQL*Plus inside the test container, so an error in the script fails every `*IT`. The message ends with the SQL*Plus output, including the `ORA-` error.
+
+**Fix:** correct the statement that the `ORA-` error points to. The test container starts empty on every run, so the script must work on a fresh schema, as it does in [Getting Started](../README.md#2-start-the-database-first-run-only-create-user-and-schema).
+
+### Mockito is currently self-attaching
+
+```text
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build
+```
+
+**Cause:** on JDK 21 and later, the JVM warns when a library loads a Java agent while running, which Mockito does to mock final classes. It is a warning: the tests still run and pass.
+
+**Fix:** nothing is needed for now. If a future JDK turns it into an error, load Mockito as an agent in the Surefire configuration of `pom.xml` (an `argLine` with `-javaagent` pointing to the `mockito-core` jar), as the [Mockito documentation](https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html) explains under "Explicitly setting up instrumentation for inline mocking".
+
+### pytest: ModuleNotFoundError: No module named 'main'
+
+**Cause:** pytest ran outside `analytics-service/` or without `uv run`, so it did not read the settings in `pyproject.toml` that let the tests import the service modules.
+
+**Fix:**
+
+```bash
+cd analytics-service
+uv run pytest
+```
+
+---
+
 ## Analytics service
 
 Run every command from `analytics-service/` and through `uv run`, which uses the project's locked environment in `.venv`.
