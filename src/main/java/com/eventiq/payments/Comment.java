@@ -17,9 +17,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "comments", uniqueConstraints =
+		@UniqueConstraint(name = "uq_comments_registration", columnNames = { "event_id", "attendee_id" }))
 public class Comment {
 
 	@Id

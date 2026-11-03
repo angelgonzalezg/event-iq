@@ -23,7 +23,8 @@ public class PaymentStatusConverter implements AttributeConverter<PaymentStatus,
 				return candidate;
 			}
 		}
-		throw new IllegalArgumentException("Unknown payment status: " + status);
+		throw new IllegalArgumentException(
+				"The payment status is invalid. Allowed values: pending, paid, refunded.");
 	}
 
 }
