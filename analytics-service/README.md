@@ -17,6 +17,7 @@ uv run uvicorn main:app --reload --port 8000
 ```
 
 - Health check: `curl -i localhost:8000/health` returns `200` with `{"status":"UP","database":"UP"}`, or `503` with `"DOWN"` if Oracle is unreachable.
+- Test dataframe querying: `python -c "from database import query_to_dataframe; print(query_to_dataframe('SELECT COUNT(*) as total FROM events'))"`
 - Interactive API docs: <http://localhost:8000/docs>
 
 ## Dependencies
