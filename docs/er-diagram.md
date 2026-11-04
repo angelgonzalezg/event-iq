@@ -87,6 +87,7 @@ erDiagram
 - A payment must use a registration and a ticket type from the same event. Two foreign keys use `payments.event_id` to enforce this rule.
 - A registration can have only one active payment: `pending` or `paid`. After a refund, a new payment is allowed.
 - A comment requires a registration for that attendee and event. The registration can have any status, including `cancelled`.
+- An attendee can leave only one comment per event. The pair `(event_id, attendee_id)` is unique in `comments`.
 - Oracle blocks deletion of a registration that has comments or payments. A status change does not delete the registration.
 - Capacity must be a positive integer. Prices and amounts can be zero, but cannot be negative.
 - Required names, emails and comments cannot contain only whitespace.

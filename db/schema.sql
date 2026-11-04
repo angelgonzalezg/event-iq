@@ -141,12 +141,14 @@ CREATE TABLE comments (
     CONSTRAINT fk_comments_registration
         FOREIGN KEY (event_id, attendee_id)
         REFERENCES registrations (event_id, attendee_id),
+    CONSTRAINT uq_comments_registration
+        UNIQUE (event_id, attendee_id),
     CONSTRAINT ck_comments_content
         CHECK (REGEXP_LIKE(content, '[^[:space:]]'))
 );
 
 -- Foreign key indexes.
--- uq_registration already covers lookups starting with event_id.
+-- uq_registration and uq_comments_registration already cover lookups starting with event_id.
 
 CREATE INDEX ix_registrations_attendee
     ON registrations (attendee_id);
@@ -168,9 +170,6 @@ CREATE UNIQUE INDEX uq_payments_active
 
 CREATE INDEX ix_comments_attendee
     ON comments (attendee_id);
-
-CREATE INDEX ix_comments_registration
-    ON comments (event_id, attendee_id);
 
 -- Upcoming event queries.
 
