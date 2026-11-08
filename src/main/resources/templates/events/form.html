@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=#{events.form.title}, section='events', content=~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1 th:text="${eventId == null} ? #{events.form.new.title} : #{events.form.edit.title}">New event</h1>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form th:object="${event}"
+            th:action="${eventId == null} ? @{/events} : @{/events/{id}(id=${eventId})}"
+            method="post" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="name" th:text="#{events.form.name}">Name</label>
+          <input class="form-control" id="name" th:field="*{name}" th:errorclass="is-invalid" maxlength="150">
+          <div class="invalid-feedback" th:errors="*{name}">Name is required.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="description" th:text="#{events.form.description}">Description</label>
+          <textarea class="form-control" id="description" rows="3" th:field="*{description}"
+                    th:errorclass="is-invalid"></textarea>
+          <div class="invalid-feedback" th:errors="*{description}">Description is too long.</div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label" for="eventDate" th:text="#{events.form.date}">Date</label>
+            <input class="form-control" id="eventDate" type="date" th:field="*{eventDate}" th:errorclass="is-invalid">
+            <div class="invalid-feedback" th:errors="*{eventDate}">Date is required.</div>
+          </div>
+          <div class="col-md-5 mb-3">
+            <label class="form-label" for="location" th:text="#{events.form.location}">Location</label>
+            <input class="form-control" id="location" th:field="*{location}" th:errorclass="is-invalid" maxlength="150">
+            <div class="invalid-feedback" th:errors="*{location}">Location is too long.</div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label" for="capacity" th:text="#{events.form.capacity}">Capacity</label>
+            <input class="form-control" id="capacity" type="number" min="1" step="1" th:field="*{capacity}"
+                   th:errorclass="is-invalid">
+            <div class="invalid-feedback" th:errors="*{capacity}">Capacity must be greater than zero.</div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-primary" type="submit" th:text="#{events.form.save}">Save</button>
+          <a class="btn btn-outline-secondary" th:href="@{/events}" th:text="#{events.form.cancel}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+</body>
+</html>
