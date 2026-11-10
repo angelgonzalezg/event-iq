@@ -34,7 +34,6 @@ class AttendeeServiceTests {
 	@InjectMocks
 	private AttendeeService service;
 
-	// Verifies the saved contact data and normalized email returned to the caller.
 	@Test
 	void createsAnAttendeeWithANormalizedEmailAndReturnsItsSavedData() {
 		CreateAttendeeRequest request = new CreateAttendeeRequest("Ana O'León", "  ANA.LOPEZ+news@Example.COM  ", "+52 81 1234 5678");
@@ -51,7 +50,6 @@ class AttendeeServiceTests {
 		assertThat(response).isEqualTo(new AttendeeResponse(7L, request.name(), saved.getEmail(), request.phone()));
 	}
 
-	// Verifies that lookup uses the same email normalization as creation.
 	@Test
 	void looksUpTheCanonicalEmailAndReturnsTheAttendee() {
 		when(this.attendees.findByEmail("ana.lopez+news@example.com"))
@@ -61,7 +59,6 @@ class AttendeeServiceTests {
 			.isEqualTo(new AttendeeResponse(7L, "Ana Lopez", "ana.lopez+news@example.com", null));
 	}
 
-	// Verifies that an empty repository result becomes HTTP 404.
 	@Test
 	void answers404WhenTheEmailIsNotRegistered() {
 		when(this.attendees.findByEmail("missing@example.com")).thenReturn(Optional.empty());
@@ -74,7 +71,6 @@ class AttendeeServiceTests {
 			});
 	}
 
-	// Covers Oracle constraint names with and without schema qualification and quotes.
 	@ParameterizedTest
 	@ValueSource(strings = { "UQ_ATTENDEES_EMAIL", "APP_USER.UQ_ATTENDEES_EMAIL", "\"APP_USER\".\"UQ_ATTENDEES_EMAIL\"" })
 	void translatesTheEmailConstraintToAClearConflict(String constraint) {
@@ -90,7 +86,6 @@ class AttendeeServiceTests {
 			});
 	}
 
-	// Verifies that unrelated constraints keep their original failure.
 	@ParameterizedTest
 	@NullSource
 	@ValueSource(strings = { "CK_ATTENDEES_EMAIL", "PK_ATTENDEES", "UQ_OTHER_EMAIL" })
@@ -102,7 +97,6 @@ class AttendeeServiceTests {
 			.isSameAs(failure);
 	}
 
-	// Covers integrity failures that contain no identifiable constraint.
 	@Test
 	void preservesAnIntegrityFailureWithoutAHibernateConstraint() {
 		DataIntegrityViolationException failure = new DataIntegrityViolationException("Unknown integrity failure");
@@ -112,13 +106,11 @@ class AttendeeServiceTests {
 			.isSameAs(failure);
 	}
 
-	// Builds a database failure with the Hibernate constraint used by each test.
 	private static DataIntegrityViolationException integrityViolation(String constraint) {
 		return new DataIntegrityViolationException("Database rejected the insert",
 				new ConstraintViolationException("Constraint violation", new SQLException("Constraint violation"), constraint));
 	}
 
-	// Builds an attendee with an ID normally assigned by Oracle.
 	private static Attendee attendee(Long id, String name, String email, String phone) {
 		Attendee attendee = new Attendee(name, email, phone);
 		ReflectionTestUtils.setField(attendee, "attendeeId", id);

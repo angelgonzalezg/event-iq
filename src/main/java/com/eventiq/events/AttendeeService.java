@@ -14,12 +14,10 @@ public class AttendeeService {
 
 	private final AttendeeRepository attendeeRepository;
 
-	// Receives the attendee repository through constructor injection.
 	public AttendeeService(AttendeeRepository attendeeRepository) {
 		this.attendeeRepository = attendeeRepository;
 	}
 
-	// Saves an attendee and reports duplicate emails as HTTP 409.
 	@Transactional
 	public AttendeeResponse create(CreateAttendeeRequest request) {
 		Attendee attendee = new Attendee(request.name(), request.email(), request.phone());
@@ -35,7 +33,6 @@ public class AttendeeService {
 		}
 	}
 
-	// Normalizes the email and returns a match, or raises HTTP 404.
 	@Transactional(readOnly = true)
 	public AttendeeResponse findByEmail(String email) {
 		return this.attendeeRepository.findByEmail(AttendeeEmail.normalize(email))

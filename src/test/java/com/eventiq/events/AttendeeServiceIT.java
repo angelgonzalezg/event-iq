@@ -39,13 +39,11 @@ class AttendeeServiceIT {
 
 	private final String email = "attendee-" + UUID.randomUUID() + "@example.com";
 
-	// Removes this test's committed row from the disposable database.
 	@AfterEach
 	void removeCommittedTestData() {
 		this.attendees.findByEmail(this.email).ifPresent(this.attendees::delete);
 	}
 
-	// Verifies persistence and lookup of the canonical email against Oracle.
 	@Test
 	void commitsTheCanonicalEmailAndFindsItRegardlessOfCaseOrOuterSpaces() {
 		String suppliedEmail = "  " + this.email.toUpperCase(Locale.ROOT) + "  ";
@@ -57,7 +55,6 @@ class AttendeeServiceIT {
 		assertThat(this.attendees.findById(created.attendeeId()).orElseThrow().getEmail()).isEqualTo(this.email);
 	}
 
-	// Verifies that a rejected duplicate leaves the original attendee unchanged.
 	@Test
 	void rejectsACaseVariantDuplicateWithoutChangingTheOriginalAttendee() {
 		AttendeeResponse original = this.service.create(new CreateAttendeeRequest("Ana", this.email, null));
@@ -72,7 +69,6 @@ class AttendeeServiceIT {
 		assertThat(this.service.findByEmail(this.email)).isEqualTo(original);
 	}
 
-	// Verifies that two concurrent creates produce one row and one conflict.
 	@Test
 	void twoConcurrentTransactionsCreateOnlyOneAttendeeAndTheOtherReceives409() throws Exception {
 		CyclicBarrier start = new CyclicBarrier(2);
