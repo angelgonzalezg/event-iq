@@ -3,8 +3,6 @@ package com.eventiq.events;
 import java.util.Map;
 import java.util.Objects;
 
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -13,9 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Keeps attendee errors consistent even when a general API advice is also present. */
 @RestControllerAdvice(assignableTypes = AttendeeApiController.class)
-@Order(Ordered.HIGHEST_PRECEDENCE)
 class AttendeeApiExceptionHandler {
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

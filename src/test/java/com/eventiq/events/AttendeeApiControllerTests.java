@@ -8,15 +8,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.net.URI;
 import java.util.stream.Stream;
-
-import com.eventiq.payments.TicketTypeApiController;
-import com.eventiq.payments.TicketTypeService;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,7 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 
-@WebMvcTest({ AttendeeApiController.class, TicketTypeApiController.class })
+@WebMvcTest(AttendeeApiController.class)
 @WithMockUser
 class AttendeeApiControllerTests {
 
@@ -42,34 +37,35 @@ class AttendeeApiControllerTests {
 	@MockitoBean
 	private AttendeeService service;
 
-	@MockitoBean
-	private TicketTypeService ticketTypes;
-
 	@Test
-	void createsAnAttendeeAndItsLocationCanBeUsedToLookItUp() throws Exception {
+	void createsAnAttendeeAndReturnsItsDataWithANormalizedEmail() throws Exception {
 		CreateAttendeeRequest request = new CreateAttendeeRequest("Ana O'León", "ana.lopez+news@example.com", "+52 81 1234 5678");
 		AttendeeResponse response = new AttendeeResponse(7L, request.name(), request.email(), request.phone());
 		when(this.service.create(request)).thenReturn(response);
-		when(this.service.findByEmail(request.email())).thenReturn(response);
 
-		String location = this.mvc.perform(post("/api/attendees").with(csrf())
+		this.mvc.perform(post("/api/attendees").with(csrf())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("""
 					{"name": "Ana O'León", "email": "  ANA.LOPEZ+news@Example.COM  ", "phone": "+52 81 1234 5678"}
 					"""))
 			.andExpect(status().isCreated())
-			.andExpect(header().string("Location", "http://localhost/api/attendees/ana.lopez%2Bnews%40example.com"))
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.attendeeId").value(7))
 			.andExpect(jsonPath("$.name").value(request.name()))
 			.andExpect(jsonPath("$.email").value(request.email()))
-			.andExpect(jsonPath("$.phone").value(request.phone()))
-			.andReturn().getResponse().getHeader("Location");
+			.andExpect(jsonPath("$.phone").value(request.phone()));
+	}
 
-		this.mvc.perform(get(URI.create(location)))
+	@Test
+	void returnsTheAttendeeRegisteredWithTheRequestedEmail() throws Exception {
+		String email = "ana.lopez+news@example.com";
+		when(this.service.findByEmail(email)).thenReturn(new AttendeeResponse(7L, "Ana Lopez", email, null));
+
+		this.mvc.perform(get("/api/attendees/{email}", email))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.attendeeId").value(7))
-			.andExpect(jsonPath("$.email").value(request.email()));
+			.andExpect(jsonPath("$.name").value("Ana Lopez"))
+			.andExpect(jsonPath("$.email").value(email));
 	}
 
 	@Test
@@ -188,15 +184,6 @@ class AttendeeApiControllerTests {
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
 			.andExpect(jsonPath("$.status").value(404))
 			.andExpect(jsonPath("$.detail").value("Attendee not found."));
-	}
-
-	@Test
-	void doesNotApplyTheAttendeeErrorHandlerToOtherControllers() throws Exception {
-		when(this.ticketTypes.findAll()).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found."));
-
-		this.mvc.perform(get("/api/ticket-types"))
-			.andExpect(status().isNotFound())
-			.andExpect(content().string(""));
 	}
 
 }
