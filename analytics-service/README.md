@@ -20,6 +20,27 @@ uv run uvicorn main:app --reload --port 8000
 - Test dataframe querying: `python -c "from database import query_to_dataframe; print(query_to_dataframe('SELECT COUNT(*) as total FROM events'))"`
 - Interactive API docs: <http://localhost:8000/docs>
 
+## Exploratory analysis
+
+Two endpoints answer what drives income. Both appear in <http://localhost:8000/docs>:
+
+- `GET /analytics/revenue-by-event`
+   One row per event, highest revenue first: `event_id`, `name`, `event_date`, `capacity`, `tickets_sold`, `revenue` 
+
+- `GET /analytics/ticket-type-distribution`
+   One row per ticket type (General, VIP, Student): `tickets`, `ticket_share`, `revenue`, `revenue_share` 
+
+Only `paid` payments count as revenue and as tickets sold: a `pending` payment has not been charged and a `refunded` one was returned. Events and ticket types with no sales appear with zeros. If Oracle is unreachable, both answer `503`, like `/health`. The queries and the response models are in `eda.py`.
+
+[`docs/analysis.ipynb`](../docs/analysis.ipynb) explores the same data: distributions, correlations and written findings. It is saved with its results, so GitHub shows the charts without running anything. The figures in it come from the fixed-seed data; to reproduce them:
+
+```bash
+cd analytics-service
+uv run python seed_data.py --truncate --seed
+```
+
+Then open the notebook in your IDE and choose the `analytics-service/.venv` interpreter (`ipykernel` and `matplotlib` are development dependencies), or run it in JupyterLab without adding anything to the project: `uv run --with jupyterlab==4.6.6 jupyter lab ../docs/analysis.ipynb`.
+
 ## Tests
 
 ```bash
