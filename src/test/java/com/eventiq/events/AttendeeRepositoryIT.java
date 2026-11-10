@@ -21,6 +21,7 @@ class AttendeeRepositoryIT {
 	@Autowired
 	private AttendeeRepository attendees;
 
+	// Verifies that Oracle enforces email uniqueness regardless of the attendee's name.
 	@Test
 	void rejectsADuplicateEmailEvenWhenTheNamesDiffer() {
 		this.attendees.saveAndFlush(new Attendee("Ana", "ana@example.com", null));
@@ -29,6 +30,7 @@ class AttendeeRepositoryIT {
 			.isInstanceOf(DataIntegrityViolationException.class);
 	}
 
+	// Verifies that Oracle rejects emails that bypass application normalization.
 	@ParameterizedTest
 	@ValueSource(strings = { "Ana@Example.COM", " ana@example.com " })
 	void rejectsEmailsThatWereNotNormalizedBeforeTheWrite(String email) {

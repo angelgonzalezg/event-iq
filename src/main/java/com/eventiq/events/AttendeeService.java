@@ -12,18 +12,20 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AttendeeService {
 
-	private final AttendeeRepository attendees;
+	private final AttendeeRepository attendeeRepository;
 
-	public AttendeeService(AttendeeRepository attendees) {
-		this.attendees = attendees;
+	// Receives the attendee repository through constructor injection.
+	public AttendeeService(AttendeeRepository attendeeRepository) {
+		this.attendeeRepository = attendeeRepository;
 	}
 
+	// Saves an attendee and reports duplicate emails as HTTP 409.
 	@Transactional
 	public AttendeeResponse create(CreateAttendeeRequest request) {
 		Attendee attendee = new Attendee(request.name(), request.email(), request.phone());
 		try {
 			// Flush inside the transaction so concurrent duplicates receive the same 409.
-			return AttendeeResponse.from(this.attendees.saveAndFlush(attendee));
+			return AttendeeResponse.from(this.attendeeRepository.saveAndFlush(attendee));
 		}
 		catch (DataIntegrityViolationException ex) {
 			if (isDuplicateEmail(ex)) {
@@ -33,18 +35,20 @@ public class AttendeeService {
 		}
 	}
 
+	// Normalizes the email and returns a match, or raises HTTP 404.
 	@Transactional(readOnly = true)
 	public AttendeeResponse findByEmail(String email) {
-		return this.attendees.findByEmail(AttendeeEmail.normalize(email))
+		return this.attendeeRepository.findByEmail(AttendeeEmail.normalize(email))
 			.map(AttendeeResponse::from)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendee not found."));
 	}
 
+	// Identifies the email unique constraint without masking other database errors.
 	private static boolean isDuplicateEmail(Throwable error) {
 		for (Throwable cause = error; cause != null; cause = cause.getCause()) {
 			if (cause instanceof ConstraintViolationException violation && violation.getConstraintName() != null) {
-				String name = violation.getConstraintName().replace("\"", "").toUpperCase(Locale.ROOT);
-				if (name.equals("UQ_ATTENDEES_EMAIL") || name.endsWith(".UQ_ATTENDEES_EMAIL")) {
+				String constraintName = violation.getConstraintName().replace("\"", "").toUpperCase(Locale.ROOT);
+				if (constraintName.equals("UQ_ATTENDEES_EMAIL") || constraintName.endsWith(".UQ_ATTENDEES_EMAIL")) {
 					return true;
 				}
 			}

@@ -37,6 +37,7 @@ class AttendeeApiControllerTests {
 	@MockitoBean
 	private AttendeeService service;
 
+	// Verifies the creation response and normalization before the service is called.
 	@Test
 	void createsAnAttendeeAndReturnsItsDataWithANormalizedEmail() throws Exception {
 		CreateAttendeeRequest request = new CreateAttendeeRequest("Ana O'León", "ana.lopez+news@example.com", "+52 81 1234 5678");
@@ -56,6 +57,7 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.phone").value(request.phone()));
 	}
 
+	// Verifies the successful email lookup response.
 	@Test
 	void returnsTheAttendeeRegisteredWithTheRequestedEmail() throws Exception {
 		String email = "ana.lopez@example.com";
@@ -68,6 +70,7 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.email").value(email));
 	}
 
+	// Verifies query parameter lookup for emails containing reserved URI characters.
 	@ParameterizedTest
 	@ValueSource(strings = { "ana/review@example.com", "ana%review@example.com", "ana+review@example.com" })
 	void looksUpEmailsWithReservedCharactersThroughAQueryParameter(String email) throws Exception {
@@ -79,6 +82,7 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.email").value(email));
 	}
 
+	// Verifies that name and email are enough to create an attendee.
 	@Test
 	void acceptsAnOmittedPhone() throws Exception {
 		when(this.service.create(new CreateAttendeeRequest("Ana", "ana@example.com", null)))
@@ -93,6 +97,7 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.phone").isEmpty());
 	}
 
+	// Verifies that values at the Oracle column length limits are accepted.
 	@Test
 	void acceptsTheSchemaLengthLimits() throws Exception {
 		String name = "a".repeat(100);
@@ -109,6 +114,7 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.email").value(email));
 	}
 
+	// Verifies field errors and prevents invalid requests from reaching the service.
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("invalidAttendees")
 	void rejectsInvalidFieldsWith400WithoutCallingTheService(String description, String body, String field) throws Exception {
@@ -120,6 +126,7 @@ class AttendeeApiControllerTests {
 		verifyNoInteractions(this.service);
 	}
 
+	// Provides missing, malformed and oversized values for request validation tests.
 	private static Stream<Arguments> invalidAttendees() {
 		return Stream.of(
 				Arguments.of("missing name", """
@@ -160,6 +167,7 @@ class AttendeeApiControllerTests {
 						""".formatted("1".repeat(21)), "phone"));
 	}
 
+	// Verifies HTTP 400 for bodies that cannot be read as an attendee request.
 	@ParameterizedTest
 	@ValueSource(strings = { "", "{not json", "null", "[]" })
 	void rejectsMissingOrMalformedBodies(String body) throws Exception {
@@ -170,6 +178,7 @@ class AttendeeApiControllerTests {
 		verifyNoInteractions(this.service);
 	}
 
+	// Verifies the conflict status and readable message required for duplicate emails.
 	@Test
 	void answers409WithAClearMessageForADuplicateEmail() throws Exception {
 		when(this.service.create(any(CreateAttendeeRequest.class)))
@@ -185,6 +194,7 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.detail").value("An attendee with this email already exists."));
 	}
 
+	// Verifies the error response when the queried email is not registered.
 	@Test
 	void answers404WithAClearMessageWhenTheEmailIsUnknown() throws Exception {
 		when(this.service.findByEmail("missing@example.com"))

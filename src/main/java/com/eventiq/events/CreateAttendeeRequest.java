@@ -12,6 +12,7 @@ public record CreateAttendeeRequest(
 		@Size(max = 100, message = "Email must be at most 100 characters.") String email,
 		@Size(max = 20, message = "Phone must be at most 20 characters.") String phone) {
 
+	// Normalizes the email before request validation runs.
 	public CreateAttendeeRequest {
 		email = AttendeeEmail.normalize(email);
 	}

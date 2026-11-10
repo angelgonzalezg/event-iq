@@ -15,20 +15,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/attendees")
 public class AttendeeApiController {
 
-	private final AttendeeService attendees;
+	private final AttendeeService attendeeService;
 
-	public AttendeeApiController(AttendeeService attendees) {
-		this.attendees = attendees;
+	// Receives the attendee service through constructor injection.
+	public AttendeeApiController(AttendeeService attendeeService) {
+		this.attendeeService = attendeeService;
 	}
 
+	// Validates the request and returns the created attendee with HTTP 201.
 	@PostMapping
 	public ResponseEntity<AttendeeResponse> create(@Valid @RequestBody CreateAttendeeRequest request) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(this.attendees.create(request));
+		return ResponseEntity.status(HttpStatus.CREATED).body(this.attendeeService.create(request));
 	}
 
+	// Looks up an attendee using the email query parameter.
 	@GetMapping(params = "email")
 	public AttendeeResponse findByEmail(@RequestParam("email") String email) {
-		return this.attendees.findByEmail(email);
+		return this.attendeeService.findByEmail(email);
 	}
 
 }
