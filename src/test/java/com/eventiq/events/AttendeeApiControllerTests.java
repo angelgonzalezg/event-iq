@@ -68,6 +68,27 @@ class AttendeeApiControllerTests {
 			.andExpect(jsonPath("$.email").value(email));
 	}
 
+	@ParameterizedTest
+	@ValueSource(strings = { "ana/review@example.com", "ana%review@example.com", "ana+review@example.com" })
+	void looksUpEmailsWithReservedCharactersThroughAQueryParameter(String email) throws Exception {
+		when(this.service.findByEmail(email)).thenReturn(new AttendeeResponse(7L, "Ana Lopez", email, null));
+
+		this.mvc.perform(get("/api/attendees").param("email", email))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.attendeeId").value(7))
+			.andExpect(jsonPath("$.email").value(email));
+	}
+
+	@Test
+	void answers404WhenTheEmailInTheQueryParameterIsUnknown() throws Exception {
+		when(this.service.findByEmail("missing@example.com"))
+			.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendee not found."));
+
+		this.mvc.perform(get("/api/attendees").param("email", "missing@example.com"))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.detail").value("Attendee not found."));
+	}
+
 	@Test
 	void acceptsAnOmittedPhone() throws Exception {
 		when(this.service.create(new CreateAttendeeRequest("Ana", "ana@example.com", null)))
