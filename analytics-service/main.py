@@ -7,10 +7,12 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from database import get_connection
+from eda import router as eda_router
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="EventIQ Analytics Service")
+app.include_router(eda_router)
 
 
 @app.get("/health")
