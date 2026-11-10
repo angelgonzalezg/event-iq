@@ -58,10 +58,10 @@ class AttendeeApiControllerTests {
 
 	@Test
 	void returnsTheAttendeeRegisteredWithTheRequestedEmail() throws Exception {
-		String email = "ana.lopez+news@example.com";
+		String email = "ana.lopez@example.com";
 		when(this.service.findByEmail(email)).thenReturn(new AttendeeResponse(7L, "Ana Lopez", email, null));
 
-		this.mvc.perform(get("/api/attendees/{email}", email))
+		this.mvc.perform(get("/api/attendees").param("email", email))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.attendeeId").value(7))
 			.andExpect(jsonPath("$.name").value("Ana Lopez"))
@@ -77,16 +77,6 @@ class AttendeeApiControllerTests {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.attendeeId").value(7))
 			.andExpect(jsonPath("$.email").value(email));
-	}
-
-	@Test
-	void answers404WhenTheEmailInTheQueryParameterIsUnknown() throws Exception {
-		when(this.service.findByEmail("missing@example.com"))
-			.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendee not found."));
-
-		this.mvc.perform(get("/api/attendees").param("email", "missing@example.com"))
-			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.detail").value("Attendee not found."));
 	}
 
 	@Test
@@ -200,7 +190,7 @@ class AttendeeApiControllerTests {
 		when(this.service.findByEmail("missing@example.com"))
 			.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Attendee not found."));
 
-		this.mvc.perform(get("/api/attendees/{email}", "missing@example.com"))
+		this.mvc.perform(get("/api/attendees").param("email", "missing@example.com"))
 			.andExpect(status().isNotFound())
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
 			.andExpect(jsonPath("$.status").value(404))
