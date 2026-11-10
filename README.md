@@ -74,6 +74,29 @@ The main technical decisions are recorded as ADRs in [`docs/adr/`](docs/adr/READ
 
 ---
 
+## Attendees API
+
+| Method and route | Result |
+|---|---|
+| `POST /api/attendees` | Create an attendee; return `201`, their data and a `Location` header for the lookup route. |
+| `GET /api/attendees/{email}` | Return the attendee (`200`), or `404` when the email is unknown. |
+
+The request requires a nonblank `name` and a valid `email`, each at most 100 characters. `phone` is optional and at most 20 characters. Emails are trimmed and lowercased before validation and storage, and before lookups, following the [database conventions](docs/er-diagram.md#application-requirements). Names can include accents and apostrophes. Event enrollment belongs to the registration workflow (#26).
+
+```bash
+curl -i -X POST http://localhost:8080/api/attendees \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Ana Lopez","email":" ANA.LOPEZ+news@Example.com "}'
+
+curl -i 'http://localhost:8080/api/attendees/ana.lopez%2Bnews%40example.com'
+```
+
+Both successful responses contain `attendeeId`, `name`, the normalized `email` and `phone` (null when omitted). Use the returned `Location` to look up a newly created attendee; it encodes the email as a URI path value, including `+` and `@`.
+
+Errors use `application/problem+json`, with `status` and a readable `detail`. Invalid fields return `400` with an `errors` array containing `field` and `message`; a missing or malformed JSON body also returns `400`. A duplicate email returns `409` with `An attendee with this email already exists.`, including case variants and concurrent creation attempts. An unknown email returns `404` with `Attendee not found.`
+
+These routes currently use the temporary development security configuration. The form login and JWT implementation is tracked in #29.
+
 ## Views
 
 | Route | Page | Module |
