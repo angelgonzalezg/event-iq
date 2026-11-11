@@ -1,0 +1,341 @@
+{
+  "info": {
+    "_postman_id": "df9bfabb-de1a-449e-a59f-c3fb366edc7f",
+    "name": "EventIQ - Events",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "59072295",
+    "_collection_link": "https://go.postman.co/collection/59072295-df9bfabb-de1a-449e-a59f-c3fb366edc7f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Attendees",
+      "item": [
+        {
+          "name": "Create attendee",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\n    \"attendeeEmail\",\n    `QA.Issue25.${Date.now()}@Example.com`\n);\n"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 201;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n\nif (pm.response.code === 201) {\n    const attendee = pm.response.json();\n\n    pm.test(\"Normalizes email\", () => {\n        pm.expect(attendee.email).to.eql(\n            pm.collectionVariables.get(\"attendeeEmail\").trim().toLowerCase()\n        );\n    });\n\n    pm.collectionVariables.set(\"attendeeId\", attendee.attendeeId);\n    pm.collectionVariables.set(\n        \"attendeeEmailEncoded\",\n        encodeURIComponent(attendee.email)\n    );\n}\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ana Lopez\",\n  \"email\": \" {{attendeeEmail}} \"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find attendee by email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 200;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n\npm.test(\"Returns the created attendee\", () => {\n    pm.expect(pm.response.json().attendeeId).to.eql(\n        Number(pm.collectionVariables.get(\"attendeeId\"))\n    );\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees?email={{attendeeEmailEncoded}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{attendeeEmailEncoded}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject duplicate email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 409;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n\npm.test(\"Explains the duplicate email\", () => {\n    pm.expect(pm.response.json().detail).to.eql(\n        \"An attendee with this email already exists.\"\n    );\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ana Lopez\",\n  \"email\": \" {{attendeeEmail}} \"\n}\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find unknown email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 404;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees?email=missing.issue25%40example.com",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "missing.issue25%40example.com"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject invalid email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 400;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Ana\",\n    \"email\": \"correo-invalido\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject missing name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 400;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{attendeeEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject blank name",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 400;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"   \",\n    \"email\": \"{{attendeeEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reject missing email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const expectedStatus = 400;\n\npm.test(\"Returns \" + expectedStatus, () => {\n    pm.response.to.have.status(expectedStatus);\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Ana\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/attendees",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "attendees"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "attendeeEmail",
+      "value": ""
+    },
+    {
+      "key": "attendeeEmailEncoded",
+      "value": ""
+    },
+    {
+      "key": "attendeeId",
+      "value": ""
+    }
+  ]
+}
