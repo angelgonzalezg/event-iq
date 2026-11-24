@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=#{events.list.title}, section='events', content=~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1 th:text="#{events.list.title}">Events</h1>
+      <p class="page-subtitle" th:text="#{events.list.subtitle}">Upcoming and past events</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" th:href="@{/events/new}">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i><span th:text="#{events.new}">New event</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="app-empty-state" th:if="${#lists.isEmpty(events)}">
+    <h2 class="h4" th:text="#{events.empty.heading}">No events yet</h2>
+    <p class="text-body-secondary" th:text="#{events.empty.description}">Create the first event to start taking registrations.</p>
+    <a class="btn btn-primary" th:href="@{/events/new}">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i><span th:text="#{events.new}">New event</span>
+    </a>
+  </div>
+
+  <div class="card" th:unless="${#lists.isEmpty(events)}">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col" th:text="#{events.table.name}">Name</th>
+            <th scope="col" th:text="#{events.table.date}">Date</th>
+            <th scope="col" th:text="#{events.table.location}">Location</th>
+            <th scope="col" th:text="#{events.table.capacity}">Capacity</th>
+            <th scope="col" class="text-end"><span class="visually-hidden" th:text="#{events.table.actions}">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="event : ${events}">
+            <td th:text="${event.name()}">Java Day</td>
+            <td th:text="${#temporals.format(event.eventDate(), 'yyyy-MM-dd')}">2026-11-10</td>
+            <td th:text="${event.location()}">Online</td>
+            <td th:text="${event.capacity()}">50</td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-2">
+                <a class="btn btn-sm btn-outline-secondary" th:href="@{/events/{id}/edit(id=${event.eventId()})}">
+                  <i class="bi bi-pencil" aria-hidden="true"></i><span th:text="#{events.edit}">Edit</span>
+                </a>
+                <form th:action="@{/events/{id}/delete(id=${event.eventId()})}" method="post"
+                      th:attr="data-confirm=#{events.delete.confirm}">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">
+                    <i class="bi bi-trash" aria-hidden="true"></i><span th:text="#{events.delete}">Delete</span>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Ask for confirmation before submitting any delete form
+    document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+      form.addEventListener('submit', function (e) {
+        if (!window.confirm(form.dataset.confirm)) {
+          e.preventDefault();
+        }
+      });
+    });
+  </script>
+</main>
+</body>
+</html>
