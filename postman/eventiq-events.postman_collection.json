@@ -2,11 +2,77 @@
   "info": {
     "_postman_id": "df9bfabb-de1a-449e-a59f-c3fb366edc7f",
     "name": "EventIQ - Events",
+    "description": "Set adminPassword in your local Postman environment to the application's ADMIN_PASSWORD, then run the collection in order. The Auth folder signs in as admin and stores the token for the current run.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "59072295",
     "_collection_link": "https://go.postman.co/collection/59072295-df9bfabb-de1a-449e-a59f-c3fb366edc7f?source=collection_link"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
+  },
   "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign in as admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('token', '');",
+                  "pm.variables.set('loginBody', JSON.stringify({",
+                  "    username: 'admin',",
+                  "    password: pm.variables.get('adminPassword')",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Returns 200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    pm.test('Returns a token', () => {",
+                  "        pm.expect(body.token).to.be.a('string').and.not.be.empty;",
+                  "    });",
+                  "    pm.variables.set('token', body.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{{loginBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "Attendees",
       "item": [

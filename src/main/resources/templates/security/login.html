@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=#{login.title}, section='', content=~{::main})}">
+<body>
+<main>
+  <div class="row justify-content-center">
+    <div class="col-sm-8 col-md-6 col-xl-4">
+      <div class="card">
+        <div class="card-body">
+          <h1 class="h3 mb-4" th:text="#{login.title}">Sign in</h1>
+          <form th:action="@{/login}" method="post">
+            <div class="mb-3">
+              <label class="form-label" for="username" th:text="#{login.username}">Username</label>
+              <input class="form-control" id="username" name="username" autocomplete="username" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="password" th:text="#{login.password}">Password</label>
+              <input class="form-control" id="password" name="password" type="password"
+                     autocomplete="current-password" required>
+            </div>
+            <button class="btn btn-primary w-100" type="submit" th:text="#{login.submit}">Sign in</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>
