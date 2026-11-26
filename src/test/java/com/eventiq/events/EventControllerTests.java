@@ -40,6 +40,9 @@ class EventControllerTests {
 	@MockitoBean
 	private EventService service;
 
+	@MockitoBean
+	private RegistrationService registrations;
+
 	@Test
 	void listShowsTheEventsInATable() throws Exception {
 		when(this.service.findAll()).thenReturn(List.of(response(7L)));
@@ -61,6 +64,32 @@ class EventControllerTests {
 		this.mvc.perform(get("/events"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(containsString("No events yet")));
+	}
+
+	@Test
+	void detailShowsTheAttendeesAndTheRemainingCapacity() throws Exception {
+		EventRegistrations detail = new EventRegistrations(response(7L),
+				List.of(new EventRegistrations.Row(3L, "Ana Lopez", "ana@example.com", "pending",
+						java.time.LocalDateTime.of(2026, 11, 1, 10, 0))),
+				49);
+		when(this.registrations.findByEvent(7L)).thenReturn(detail);
+
+		this.mvc.perform(get("/events/7"))
+			.andExpect(status().isOk())
+			.andExpect(view().name("events/detail"))
+			.andExpect(content().string(containsString("Ana Lopez")))
+			.andExpect(content().string(containsString("ana@example.com")))
+			.andExpect(content().string(containsString("<span id=\"remaining\">49</span>")))
+			.andExpect(content().string(containsString("action=\"/registrations/3/cancel\"")));
+	}
+
+	@Test
+	void detailShowsThatAFullEventIsFull() throws Exception {
+		when(this.registrations.findByEvent(7L)).thenReturn(new EventRegistrations(response(7L), List.of(), 0));
+
+		this.mvc.perform(get("/events/7"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(containsString("This event is full.")));
 	}
 
 	@Test

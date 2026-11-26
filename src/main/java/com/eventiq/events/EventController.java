@@ -23,8 +23,11 @@ class EventController {
 
 	private final EventService eventService;
 
-	EventController(EventService eventService) {
+	private final RegistrationService registrationService;
+
+	EventController(EventService eventService, RegistrationService registrationService) {
 		this.eventService = eventService;
+		this.registrationService = registrationService;
 	}
 
 	@GetMapping
@@ -48,6 +51,12 @@ class EventController {
 		this.eventService.create(form);
 		redirect.addFlashAttribute("successMessage", "events.created");
 		return "redirect:/events";
+	}
+
+	@GetMapping("/{id}")
+	String detail(@PathVariable Long id, Model model) {
+		model.addAttribute("detail", this.registrationService.findByEvent(id));
+		return "events/detail";
 	}
 
 	@GetMapping("/{id}/edit")
