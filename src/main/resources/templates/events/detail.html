@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(title=${detail.event().name()}, section='events', content=~{::main})}">
+<body>
+<main>
+  <div class="page-header">
+    <div>
+      <h1 th:text="${detail.event().name()}">Java Day</h1>
+      <p class="page-subtitle" th:text="${detail.event().description()}" th:if="${detail.event().description() != null}">Description</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-outline-secondary" th:href="@{/events}" th:text="#{events.detail.back}">Back to events</a>
+      <a class="btn btn-primary" th:unless="${detail.full()}" th:href="@{/registrations/new(eventId=${detail.event().eventId()})}">
+        <i class="bi bi-person-plus" aria-hidden="true"></i><span th:text="#{events.detail.register}">Register an attendee</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-3" th:text="#{events.detail.date}">Date</dt>
+        <dd class="col-sm-9" th:text="${#temporals.format(detail.event().eventDate(), 'yyyy-MM-dd')}">2026-11-10</dd>
+        <dt class="col-sm-3" th:text="#{events.detail.location}">Location</dt>
+        <dd class="col-sm-9" th:text="${detail.event().location()}">Online</dd>
+        <dt class="col-sm-3" th:text="#{events.detail.capacity}">Capacity</dt>
+        <dd class="col-sm-9" th:text="${detail.event().capacity()}">50</dd>
+        <dt class="col-sm-3" th:text="#{events.detail.registered}">Registered</dt>
+        <dd class="col-sm-9" th:text="${#lists.size(detail.attendees())}">3</dd>
+        <dt class="col-sm-3" th:text="#{events.detail.remaining}">Seats left</dt>
+        <dd class="col-sm-9 mb-0">
+          <span id="remaining" th:text="${detail.remaining()}">47</span>
+          <span class="badge text-bg-danger ms-2" th:if="${detail.full()}" th:text="#{events.detail.full}">This event is full.</span>
+        </dd>
+      </dl>
+    </div>
+  </div>
+
+  <h2 class="h4" th:text="#{events.detail.attendees}">Attendees</h2>
+
+  <div class="app-empty-state" th:if="${#lists.isEmpty(detail.attendees())}">
+    <p class="text-body-secondary mb-0" th:text="#{events.detail.attendees.empty}">Nobody has registered yet.</p>
+  </div>
+
+  <div class="card" th:unless="${#lists.isEmpty(detail.attendees())}">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col" th:text="#{events.detail.attendee.name}">Name</th>
+            <th scope="col" th:text="#{events.detail.attendee.email}">Email</th>
+            <th scope="col" th:text="#{events.detail.attendee.status}">Status</th>
+            <th scope="col" th:text="#{events.detail.attendee.registered-at}">Registered at</th>
+            <th scope="col" class="text-end"><span class="visually-hidden" th:text="#{events.table.actions}">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="row : ${detail.attendees()}">
+            <td th:text="${row.attendeeName()}">Ana Lopez</td>
+            <td th:text="${row.attendeeEmail()}">ana@example.com</td>
+            <td>
+              <span class="badge"
+                    th:classappend="${row.status() == 'confirmed'} ? 'text-bg-success' : 'text-bg-warning'"
+                    th:text="#{'registrations.status.' + ${row.status()}}">Pending</span>
+            </td>
+            <td th:text="${#temporals.format(row.registeredAt(), 'yyyy-MM-dd HH:mm')}">2026-11-01 10:00</td>
+            <td class="text-end">
+              <form th:action="@{/registrations/{id}/cancel(id=${row.registrationId()})}" method="post"
+                    th:attr="data-confirm=#{registrations.cancel.confirm}">
+                <button class="btn btn-sm btn-outline-danger" type="submit" th:text="#{registrations.cancel}">Cancel registration</button>
+              </form>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+      form.addEventListener('submit', function (e) {
+        if (!window.confirm(form.dataset.confirm)) {
+          e.preventDefault();
+        }
+      });
+    });
+  </script>
+</main>
+</body>
+</html>
